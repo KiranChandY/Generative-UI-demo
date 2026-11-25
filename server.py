@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 import anthropic
@@ -6,11 +7,16 @@ from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from dotenv import load_dotenv
 
 from tools import TOOLS
 from system import SYSTEM_PROMPT
 
-app = FastAPI()
+load_dotenv()  # read ANTHROPIC_API_KEY (and optional MODEL) from a local .env file
+
+MODEL = os.getenv("MODEL", "claude-opus-4-6")
+
+app = FastAPI(title="Generative UI Demo")
 client = anthropic.AsyncAnthropic()
 
 GUIDELINES_DIR = Path(__file__).parent / "guidelines"
@@ -117,7 +123,7 @@ async def chat(body: ChatBody):
 
             try:
                 async with client.messages.stream(
-                    model="claude-opus-4-6",
+                    model=MODEL,
                     max_tokens=8096,
                     system=SYSTEM_PROMPT,
                     tools=TOOLS,
@@ -222,3 +228,10 @@ async def chat(body: ChatBody):
 
 # Serve static/index.html — must be mounted last
 app.mount("/", StaticFiles(directory=str(Path(__file__).parent / "static"), html=True), name="static")
+
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("server:app", host="0.0.0.0", port=int(os.getenv("PORT", "8000")), reload=True)
