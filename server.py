@@ -226,8 +226,11 @@ async def chat(body: ChatBody):
     )
 
 
-# Serve static/index.html — must be mounted last
-app.mount("/", StaticFiles(directory=str(Path(__file__).parent / "static"), html=True), name="static")
+# Serve public/index.html locally — must be mounted last.
+# On Vercel, public/ is served by the CDN instead, so the folder isn't bundled with the function.
+PUBLIC_DIR = Path(__file__).parent / "public"
+if PUBLIC_DIR.is_dir():
+    app.mount("/", StaticFiles(directory=str(PUBLIC_DIR), html=True), name="static")
 
 
 

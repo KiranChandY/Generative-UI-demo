@@ -40,7 +40,7 @@ Generative-UI-demo/
 │   ├── diagram.md
 │   ├── interactive.md
 │   └── mockup.md
-├── static/
+├── public/
 │   └── index.html         # Chat UI + live widget panel (served at "/")
 ├── docs/
 │   └── GENERATIVE_UI_EXPLAINED.md   # Deep-dive on how everything works
