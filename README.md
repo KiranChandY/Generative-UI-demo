@@ -122,7 +122,7 @@ Then open **[http://localhost:8000](http://localhost:8000)** in your browser. Th
 | Variable            | Required | Default           | Description |
 |---------------------|----------|-------------------|-------------|
 | `ANTHROPIC_API_KEY` | ✅       | –                 | Your Anthropic API key |
-| `MODEL`             | ❌       | `claude-opus-4-6` | Claude model used for generation |
+| `MODEL`             | ❌       | `claude-haiku-5-5` | Claude model used for generation |
 | `PORT`              | ❌       | `8000`            | Port used by `python server.py` |
 
 ---

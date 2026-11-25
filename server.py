@@ -14,7 +14,7 @@ from system import SYSTEM_PROMPT
 
 load_dotenv()  # read ANTHROPIC_API_KEY (and optional MODEL) from a local .env file
 
-MODEL = os.getenv("MODEL", "claude-opus-4-6")
+MODEL = os.getenv("MODEL", "claude-haiku-5-5")
 
 app = FastAPI(title="Generative UI Demo")
 client = anthropic.AsyncAnthropic()
