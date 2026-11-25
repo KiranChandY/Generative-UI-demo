@@ -1,81 +1,79 @@
 # SVG Diagrams
 
+SVG presentation attributes cannot read CSS variables, so **set colors with the `style` attribute** (`style="fill:var(--color-surface)"`), never with `fill="#..."`. This keeps diagrams correct in both themes.
+
 ## SVG Shell
 ```html
+<style>
+.d-node{fill:var(--color-surface);stroke:var(--color-border);stroke-width:1}
+.d-hi{fill:color-mix(in srgb,var(--color-accent) 14%,transparent);stroke:var(--color-accent);stroke-width:1.5}
+.d-ok{fill:color-mix(in srgb,var(--color-success) 14%,transparent);stroke:var(--color-success)}
+.d-warn{fill:color-mix(in srgb,var(--color-warning) 14%,transparent);stroke:var(--color-warning)}
+.d-bad{fill:color-mix(in srgb,var(--color-danger) 14%,transparent);stroke:var(--color-danger)}
+.d-label{fill:var(--color-text);font-size:13px;font-weight:500}
+.d-hi-label{fill:var(--color-accent-light);font-size:13px;font-weight:500}
+.d-sub{fill:var(--color-text-muted);font-size:12px}
+.d-edge{stroke:var(--color-text-muted);stroke-width:1.5;fill:none}
+.d-arrow{fill:var(--color-text-muted)}
+</style>
 <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg"
-     style="width:100%;height:auto;display:block">
+     style="width:100%;height:auto;display:block;font-family:inherit">
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
             markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M0,0 L10,5 L0,10 Z" fill="#666"/>
+      <path d="M0,0 L10,5 L0,10 Z" class="d-arrow"/>
     </marker>
   </defs>
   <!-- nodes and edges -->
 </svg>
 ```
 
-Always define `<defs>` first so arrow markers are available during streaming.
+Put the `<style>` block first and `<defs>` at the top of the SVG so classes and markers exist during streaming.
 
 ## Node Types
 
 **Default box:**
 ```html
-<rect x="50" y="50" width="130" height="44" rx="6"
-      fill="#1a1a1a" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-<text x="115" y="77" text-anchor="middle" fill="#e8e8e8" font-size="13"
-      font-family="system-ui,sans-serif">Node Label</text>
+<rect x="50" y="50" width="140" height="48" rx="8" class="d-node"/>
+<text x="120" y="79" text-anchor="middle" class="d-label">Node label</text>
 ```
 
-**Accented box (highlighted):**
+**Highlighted box:**
 ```html
-<rect x="50" y="50" width="130" height="44" rx="6"
-      fill="rgba(124,58,237,0.15)" stroke="#7c3aed" stroke-width="1.5"/>
-<text x="115" y="77" text-anchor="middle" fill="#a78bfa" font-size="13"
-      font-family="system-ui,sans-serif">Highlighted</text>
+<rect x="50" y="50" width="140" height="48" rx="8" class="d-hi"/>
+<text x="120" y="79" text-anchor="middle" class="d-hi-label">Highlighted</text>
 ```
 
-**Success / Warning / Danger:**
-```html
-fill="rgba(16,185,129,0.12)" stroke="#10b981"  <!-- success -->
-fill="rgba(245,158,11,0.12)" stroke="#f59e0b"  <!-- warning -->
-fill="rgba(239,68,68,0.12)"  stroke="#ef4444"  <!-- danger -->
-```
+**Status boxes:** use `d-ok`, `d-warn` or `d-bad` on the `<rect>`.
 
-**Pill / rounded:**
-```html
-<rect ... rx="22"/>  <!-- use rx matching half height for full pill -->
-```
+**Pill:** set `rx` to half the height.
 
-## Edges & Arrows
+## Edges and Arrows
 
 **Straight arrow:**
 ```html
-<line x1="180" y1="72" x2="260" y2="72"
-      stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="190" y1="74" x2="270" y2="74" class="d-edge" marker-end="url(#arrow)"/>
 ```
 
 **Labeled edge:**
 ```html
-<line x1="180" y1="72" x2="260" y2="72" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
-<text x="220" y="65" text-anchor="middle" fill="#666" font-size="11"
-      font-family="system-ui,sans-serif">calls</text>
+<line x1="190" y1="74" x2="270" y2="74" class="d-edge" marker-end="url(#arrow)"/>
+<text x="230" y="64" text-anchor="middle" class="d-sub">calls</text>
 ```
 
-**Curved path (for loopbacks or crossing lines):**
+**Curved path (loopbacks or crossing lines):**
 ```html
-<path d="M 180 72 C 220 30, 260 30, 300 72" fill="none"
-      stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 190 74 C 230 30, 270 30, 310 74" class="d-edge" marker-end="url(#arrow)"/>
 ```
 
 ## Layout Tips
-- Horizontal flow: left → right, 160–180px between node centers
-- Vertical flow: top → bottom, 80–100px between rows
-- Keep viewBox proportional to content — 800×400 for wide, 600×500 for tall
-- Max 2 accent colors per diagram
-- Every `<text>` needs explicit `fill` — never rely on inheritance
+- Horizontal flow: left to right, 160 to 180px between node centers
+- Vertical flow: top to bottom, 80 to 100px between rows
+- Keep the viewBox proportional to content: 800×400 for wide, 600×500 for tall
+- At most 2 highlight colors per diagram
+- Every `<text>` gets a class with an explicit fill
 
 ## Section Headers in Diagrams
 ```html
-<text x="400" y="25" text-anchor="middle" fill="#555" font-size="13"
-      font-family="system-ui,sans-serif" font-weight="500">Section Title</text>
+<text x="400" y="24" text-anchor="middle" class="d-sub" style="font-weight:500">Section title</text>
 ```

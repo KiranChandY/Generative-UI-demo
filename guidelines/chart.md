@@ -2,15 +2,25 @@
 
 ## Loading
 ```html
-<canvas id="chart" style="width:100%;max-height:380px"></canvas>
+<div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:12px;padding:16px">
+  <canvas id="chart" style="width:100%;max-height:360px"></canvas>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-const ctx = document.getElementById('chart').getContext('2d');
-new Chart(ctx, { /* config */ });
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C = {
+  text: css('--color-text'), muted: css('--color-text-muted'), border: css('--color-border'),
+  s1: css('--color-chart-1'), s2: css('--color-chart-2'), s3: css('--color-chart-3'),
+  s4: css('--color-chart-4'), s5: css('--color-chart-5')
+};
+Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+Chart.defaults.font.size = 12;
+Chart.defaults.color = C.muted;
+new Chart(document.getElementById('chart'), { /* config */ });
 </script>
 ```
 
-Always load Chart.js via `<script src>` first, then your `<script>` block after.
+Always load Chart.js with `<script src>` first, then your own `<script>` block. Never hardcode colors: resolve them from CSS variables as above so the chart works in both themes.
 
 ## Base Config Template
 ```javascript
@@ -20,43 +30,28 @@ Always load Chart.js via `<script src>` first, then your `<script>` block after.
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
     datasets: [{
       label: 'Revenue',
-      data: [12000, 15000, 11000, 18000, 22000],
-      backgroundColor: 'rgba(124,58,237,0.65)',
-      borderColor: 'rgba(124,58,237,1)',
-      borderWidth: 1,
-      borderRadius: 4
+      data: [12400, 15130, 11870, 18260, 22410],
+      backgroundColor: C.s1,
+      borderRadius: 6,
+      maxBarThickness: 40
     }]
   },
   options: {
     responsive: true,
     plugins: {
-      legend: {
-        labels: { color: '#888', font: { size: 13 } }
-      }
+      legend: { labels: { color: C.muted, boxWidth: 8, boxHeight: 8, usePointStyle: true } },
+      tooltip: { backgroundColor: C.text, titleColor: css('--color-bg'), bodyColor: css('--color-bg'), padding: 8, cornerRadius: 8 }
     },
     scales: {
-      x: {
-        ticks: { color: '#888', font: { size: 12 } },
-        grid: { color: 'rgba(255,255,255,0.05)' }
-      },
-      y: {
-        ticks: { color: '#888', font: { size: 12 } },
-        grid: { color: 'rgba(255,255,255,0.05)' }
-      }
+      x: { ticks: { color: C.muted }, grid: { display: false }, border: { color: C.border } },
+      y: { ticks: { color: C.muted }, grid: { color: C.border }, border: { display: false } }
     }
   }
 }
 ```
 
-## Color Palette (use these hex values — they match CSS variables)
-| Color | Solid | Semi-transparent |
-|---|---|---|
-| Purple (accent) | `#7c3aed` | `rgba(124,58,237,0.65)` |
-| Teal | `#0d9488` | `rgba(13,148,136,0.65)` |
-| Amber | `#d97706` | `rgba(217,119,6,0.65)` |
-| Rose | `#e11d48` | `rgba(225,29,72,0.65)` |
-| Blue | `#2563eb` | `rgba(37,99,235,0.65)` |
-| Green | `#16a34a` | `rgba(22,163,74,0.65)` |
+## Palette
+Use `C.s1` to `C.s5` in that order. For a translucent fill append an alpha to the hex: `C.s1 + '26'` (15%), `C.s1 + 'A6'` (65%).
 
 ## Line Chart
 ```javascript
@@ -67,20 +62,20 @@ Always load Chart.js via `<script src>` first, then your `<script>` block after.
     datasets: [{
       label: 'Series',
       data: [...],
-      borderColor: '#7c3aed',
-      backgroundColor: 'rgba(124,58,237,0.1)',
+      borderColor: C.s1,
+      backgroundColor: C.s1 + '1A',
       borderWidth: 2,
-      tension: 0.4,
+      tension: 0.35,
       fill: true,
-      pointRadius: 4,
-      pointBackgroundColor: '#7c3aed'
+      pointRadius: 0,
+      pointHoverRadius: 4
     }]
   }
 }
 ```
 
-## Multi-dataset
-Use 2–4 datasets max. Each gets a distinct color from the palette above.
+## Multiple datasets
+Use 2 to 4 datasets max, each with its own palette color in order.
 
 ## Doughnut / Pie
 ```javascript
@@ -88,17 +83,11 @@ Use 2–4 datasets max. Each gets a distinct color from the palette above.
   type: 'doughnut',
   data: {
     labels: ['A', 'B', 'C'],
-    datasets: [{
-      data: [30, 45, 25],
-      backgroundColor: ['rgba(124,58,237,0.8)', 'rgba(13,148,136,0.8)', 'rgba(217,119,6,0.8)'],
-      borderWidth: 0
-    }]
+    datasets: [{ data: [31, 46, 23], backgroundColor: [C.s1, C.s2, C.s3], borderWidth: 0 }]
   },
   options: {
-    plugins: {
-      legend: { position: 'bottom', labels: { color: '#888', padding: 20 } }
-    },
-    cutout: '65%'
+    plugins: { legend: { position: 'bottom', labels: { color: C.muted, padding: 16, usePointStyle: true } } },
+    cutout: '68%'
   }
 }
 ```

@@ -21,13 +21,24 @@ Generative UI Demo is a chat app where Claude doesn't just answer in text. When 
 - **On-demand design guidelines.** A `load_guidelines` tool pulls in chart, diagram, mockup or interactive rules only when needed, which keeps prompts small.
 - **Two-way bridge.** Widgets call `window.sendToAgent(data)` to send user interactions back into the conversation.
 
+## 🎨 Design
+
+The interface follows a Vercel-style design system built on the [Geist](https://vercel.com/geist) look:
+
+- **Dark theme by default, plus a light theme.** Toggle it from the header; your choice is remembered.
+- **Geist and Geist Mono** type with a fixed type scale, a 2 to 96px spacing scale and Tailwind radius steps.
+- **Phosphor icons**, flat surfaces, hairline borders and a single easing curve for all motion. Motion is reduced when the OS asks for it.
+- **Widgets theme themselves.** Generated widgets only use shared CSS variables (`--color-*`), so they switch with the app. Canvas charts are recolored in place.
+- **Preview / Code tabs.** Watch the HTML stream in, then copy it, open it in a new tab or view it full screen.
+- **Responsive.** On phones, the chat and the preview become two tabs.
+
 ## 🧱 Tech Stack
 
 | Layer    | Tech |
 |----------|------|
 | Backend  | Python, FastAPI, Uvicorn, Server-Sent Events (SSE) |
 | AI       | Anthropic Claude API (streaming + tool use) |
-| Frontend | Vanilla HTML/CSS/JS, morphdom |
+| Frontend | Vanilla HTML/CSS/JS, morphdom, marked + DOMPurify, Geist, Phosphor Icons |
 
 ## 📁 Project Structure
 
@@ -42,8 +53,11 @@ Generative-UI-demo/
 │   ├── diagram.md
 │   ├── interactive.md
 │   └── mockup.md
-├── public/
-│   └── index.html         # Chat UI + live widget panel (served at "/")
+├── public/                # Frontend, served from Vercel's CDN
+│   ├── index.html         # Chat UI, live preview, design tokens, dark/light themes
+│   ├── 404.html
+│   ├── favicon.svg
+│   └── og.svg             # Social sharing image
 ├── docs/
 │   └── GENERATIVE_UI_EXPLAINED.md   # Deep-dive on how everything works
 ├── requirements.txt

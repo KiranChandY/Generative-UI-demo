@@ -1,506 +1,961 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Generative UI</title>
+<title>Generative UI · Describe it, watch it build</title>
+<meta name="description" content="Ask for a chart, calculator, diagram or dashboard in plain English and watch Claude build a working interface for it in real time.">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Generative UI">
+<meta property="og:description" content="Describe an interface in plain English and watch it stream in, live and interactive.">
+<meta property="og:image" content="/og.svg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+<!-- Theme is applied before first paint to avoid a flash. Dark is the default. -->
+<script>
+  (function () {
+    var t = 'dark';
+    try { t = localStorage.getItem('gui-theme') || 'dark'; } catch (e) {}
+    document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+  })();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+
 <style>
-/* ═══════════════════════════════════════════════════════════
-   Design tokens — Claude uses var() to reference every color.
-   Change these to retheme the entire app including all widgets.
-   ═══════════════════════════════════════════════════════════ */
-:root {
-  --color-bg:               #f4f4f5;
-  --color-surface:          #ffffff;
-  --color-surface-elevated: #ededf0;
-  --color-text:             #18181b;
-  --color-text-muted:       #71717a;
-  --color-accent:           #7c3aed;
-  --color-accent-light:     #8b5cf6;
-  --color-border:           rgba(0,0,0,0.09);
-  --color-success:          #059669;
-  --color-warning:          #d97706;
-  --color-danger:           #dc2626;
+/* ═══════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+   Widgets read the --color-* variables, so changing a theme here
+   restyles every generated widget too. Dark is the default theme.
+   ═══════════════════════════════════════════════════════════════════════ */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg:               #000000;
+  --color-surface:          #181818;
+  --color-surface-elevated: #272727;
+  --color-text:             #EDEDED;
+  --color-text-muted:       #A1A1A1;
+  --color-accent:           #0A72EF;
+  --color-accent-light:     #52A8FF;
+  --color-on-accent:        #FFFFFF;
+  --color-border:           rgba(255, 255, 255, 0.14);
+  --color-success:          #3ECF8E;
+  --color-warning:          #F5A524;
+  --color-danger:           #FF6166;
+  --color-chart-1:          #52A8FF;
+  --color-chart-2:          #3ECF8E;
+  --color-chart-3:          #F5A524;
+  --color-chart-4:          #C472FB;
+  --color-chart-5:          #FF6166;
+
+  /* App chrome only (not part of the widget contract) */
+  --app-primary:            #EDEDED;
+  --app-on-primary:         #000000;
+  --app-header:             rgba(0, 0, 0, 0.72);
+  --app-hover:              rgba(255, 255, 255, 0.06);
+  --app-border-strong:      rgba(255, 255, 255, 0.24);
+  --app-scrim:              rgba(0, 0, 0, 0.88);
 }
 
-/* ── Reset ── */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-bg:               #FFFFFF;
+  --color-surface:          #FAFAFA;
+  --color-surface-elevated: #F2F2F2;
+  --color-text:             #171717;
+  --color-text-muted:       #666666;
+  --color-accent:           #0070F3;
+  --color-accent-light:     #0060D1;
+  --color-on-accent:        #FFFFFF;
+  --color-border:           rgba(0, 0, 0, 0.1);
+  --color-success:          #0E8A4F;
+  --color-warning:          #B25E02;
+  --color-danger:           #D8262D;
+  --color-chart-1:          #0070F3;
+  --color-chart-2:          #0E8A4F;
+  --color-chart-3:          #D97706;
+  --color-chart-4:          #8E4EC6;
+  --color-chart-5:          #D8262D;
+
+  --app-primary:            #171717;
+  --app-on-primary:         #FFFFFF;
+  --app-header:             rgba(255, 255, 255, 0.76);
+  --app-hover:              rgba(0, 0, 0, 0.04);
+  --app-border-strong:      rgba(0, 0, 0, 0.2);
+  --app-scrim:              rgba(255, 255, 255, 0.9);
+}
+
+:root {
+  /* Type */
+  --font-sans: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Spacing scale (the only values used for padding, margin and gap) */
+  --space-25: 2px;  --space-50: 4px;  --space-75: 8px;  --space-100: 12px;
+  --space-200: 16px; --space-300: 24px; --space-400: 32px; --space-500: 40px;
+  --space-600: 48px; --space-700: 64px; --space-800: 80px; --space-900: 96px;
+
+  /* Radius (Tailwind steps) */
+  --radius-sm: 4px;   /* rounded    */
+  --radius-md: 6px;   /* rounded-md */
+  --radius-lg: 8px;   /* rounded-lg */
+  --radius-xl: 12px;  /* rounded-xl */
+  --radius-2xl: 16px; /* rounded-2xl */
+  --radius-full: 9999px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ═══════════════════════ TEXT STYLES ═══════════════════════ */
+.heading-4  { font-size: 30px; line-height: 36px; font-weight: 600; letter-spacing: -0.02em; }
+.heading-5  { font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -0.02em; }
+.heading-6  { font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -0.01em; }
+.title-3    { font-size: 16px; line-height: 24px; font-weight: 500; }
+.title-4    { font-size: 14px; line-height: 20px; font-weight: 500; }
+.title-5    { font-size: 12px; line-height: 16px; font-weight: 500; }
+.body-3     { font-size: 16px; line-height: 24px; font-weight: 400; }
+.body-5     { font-size: 14px; line-height: 20px; font-weight: 500; }
+.body-6     { font-size: 14px; line-height: 20px; font-weight: 400; }
+.button-sm  { font-size: 14px; line-height: 20px; font-weight: 600; }
+.button-xsm { font-size: 12px; line-height: 16px; font-weight: 600; }
+.caption-2  { font-size: 14px; line-height: 20px; font-weight: 400; }
+.caption-4  { font-size: 12px; line-height: 16px; font-weight: 500; }
+.caption-5  { font-size: 12px; line-height: 16px; font-weight: 400; }
+.mono       { font-family: var(--font-mono); }
+
+h1, h2, h3, .heading-4, .heading-5, .heading-6 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+/* ═══════════════════════ BASE ═══════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+html, body { height: 100%; }
+
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: var(--color-bg);
-  color: var(--color-text);
-  height: 100vh;
-  display: grid;
-  grid-template-columns: 400px 1fr;
-  overflow: hidden;
-}
-
-/* ══════════════════════
-   Chat panel (left)
-   ══════════════════════ */
-#chat-panel {
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid var(--color-border);
-  overflow: hidden;   /* prevents children from bursting out of grid cell */
-  min-height: 0;
-}
-
-#chat-header {
-  padding: 0.9rem 1.25rem;
-  border-bottom: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-shrink: 0;
-  background: var(--color-surface);
-}
-
-.logo {
-  width: 28px;
-  height: 28px;
-  background: var(--color-accent);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  color: #fff;
-  flex-shrink: 0;
-}
-
-#chat-header h1 { font-size: 14px; font-weight: 500; }
-
-#messages {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;      /* CRITICAL: without this, flex children won't scroll */
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
-}
-
-.msg-row             { display: flex; flex-direction: column; }
-.msg-row.user        { align-items: flex-end; }
-.msg-row.assistant   { align-items: flex-start; }
-
-.bubble {
-  padding: 0.6rem 0.95rem;
-  border-radius: 14px;
-  max-width: 90%;
-  font-size: 13.5px;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.bubble.user {
-  background: var(--color-accent);
-  color: #fff;
-  border-bottom-right-radius: 4px;
-}
-
-.bubble.assistant {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-bottom-left-radius: 4px;
-}
-
-.bubble.status-msg {
-  background: transparent;
-  border: 1px dashed var(--color-border);
-  color: var(--color-text-muted);
-  font-size: 12px;
-  font-style: italic;
-  padding: 0.35rem 0.75rem;
-}
-
-/* Typing indicator */
-.typing {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0.6rem 0.9rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  border-bottom-left-radius: 4px;
-  width: fit-content;
-}
-.dot {
-  width: 5px; height: 5px;
-  background: var(--color-text-muted);
-  border-radius: 50%;
-  animation: bounce 1.2s ease-in-out infinite;
-}
-.dot:nth-child(2) { animation-delay: .2s; }
-.dot:nth-child(3) { animation-delay: .4s; }
-
-@keyframes bounce {
-  0%, 60%, 100% { transform: translateY(0); }
-  30%           { transform: translateY(-5px); }
-}
-
-/* Input area */
-#input-area {
-  padding: 0.9rem;
-  border-top: 1px solid var(--color-border);
-  flex-shrink: 0;
-  background: var(--color-surface);
-}
-
-#input-box {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.5rem;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 0.45rem 0.45rem 0.45rem 0.75rem;
-  transition: border-color .15s;
-}
-#input-box:focus-within { border-color: var(--color-accent); }
-
-#user-input {
-  flex: 1;
-  background: none;
-  border: none;
-  outline: none;
-  color: var(--color-text);
+  font-family: var(--font-sans);
   font-size: 14px;
-  font-family: inherit;
-  line-height: 1.5;
-  resize: none;
-  max-height: 120px;
-  padding: 0.3rem 0;
-}
-#user-input::placeholder { color: var(--color-text-muted); }
-
-#send-btn {
-  width: 32px; height: 32px;
-  background: var(--color-accent);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: opacity .15s;
-}
-#send-btn:hover    { opacity: .85; }
-#send-btn:disabled { opacity: .4; cursor: not-allowed; }
-#send-btn svg { width: 15px; height: 15px; fill: #fff; }
-
-.hint {
-  font-size: 11px;
-  color: var(--color-text-muted);
-  text-align: center;
-  margin-top: 0.45rem;
-}
-
-/* ══════════════════════
-   Widget panel (right)
-   ══════════════════════ */
-#widget-panel {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
+  line-height: 20px;
   background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  transition: background-color 300ms var(--ease), color 300ms var(--ease);
 }
 
-#widget-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1.25rem;
-  border-bottom: 1px solid var(--color-border);
-  min-height: 46px;
-  flex-shrink: 0;
-  background: var(--color-surface);
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+.ph, .ph-fill { font-size: 16px; line-height: 1; }
+
+.skip-link {
+  position: absolute; left: var(--space-200); top: var(--space-200); z-index: 100;
+  padding: var(--space-75) var(--space-100);
+  background: var(--app-primary); color: var(--app-on-primary);
+  border-radius: var(--radius-lg);
+  transform: translateY(-200%);
+  transition: transform 300ms var(--ease);
+}
+.skip-link:focus { transform: translateY(0); }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
 
-#widget-name {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-text-muted);
-}
-
-#widget-status {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 12px;
-  color: var(--color-text-muted);
-}
-
-.status-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--color-text-muted);
-  flex-shrink: 0;
-}
-.status-dot.live {
-  background: var(--color-success);
-  animation: pulse 1.4s ease-in-out infinite;
-}
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
-
-/* Widget content area */
-#widget-root {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;      /* CRITICAL: without this, flex children won't scroll */
-  padding: 1.25rem;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
-}
-
-/* Empty state */
-#empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+/* ═══════════════════════ APP SHELL ═══════════════════════ */
+.app {
   height: 100%;
-  gap: 1rem;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+/* Header: translucent surface over a background blur */
+.app-header {
+  position: relative; z-index: 10;
+  display: flex; align-items: center; gap: var(--space-100);
+  height: 56px;
+  padding: 0 var(--space-200);
+  background: var(--app-header);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.brand { display: flex; align-items: center; gap: var(--space-100); min-width: 0; }
+.brand-mark {
+  width: 24px; height: 24px; flex-shrink: 0;
+  display: grid; place-items: center;
+  background: var(--app-primary); color: var(--app-on-primary);
+  border-radius: var(--radius-md);
+}
+.brand-mark .ph-fill { font-size: 14px; }
+.brand-divider { width: 1px; height: 20px; background: var(--color-border); transform: rotate(16deg); }
+.brand-model {
+  display: inline-flex; align-items: center; gap: var(--space-50);
+  padding: var(--space-25) var(--space-75);
+  border: 1px solid var(--color-border); border-radius: var(--radius-full);
   color: var(--color-text-muted);
-  text-align: center;
-  padding: 2rem;
+  white-space: nowrap;
+}
+.brand-model .dot { width: 6px; height: 6px; border-radius: var(--radius-full); background: var(--color-success); }
+
+.header-actions { margin-left: auto; display: flex; align-items: center; gap: var(--space-75); }
+
+/* ═══════════════════════ BUTTONS ═══════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-75);
+  padding: var(--space-75) var(--space-100);
+  border-radius: var(--radius-lg);
+  white-space: nowrap;
+  transition: background-color 300ms var(--ease), color 300ms var(--ease),
+              border-color 300ms var(--ease), opacity 300ms var(--ease), transform 300ms var(--ease);
+}
+.btn:active:not(:disabled) { transform: scale(0.98); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-primary { background: var(--app-primary); color: var(--app-on-primary); }
+.btn-primary:hover:not(:disabled) { opacity: 0.86; }
+
+.btn-secondary { border: 1px solid var(--color-border); color: var(--color-text); background: var(--color-bg); }
+.btn-secondary:hover:not(:disabled) { border-color: var(--app-border-strong); background: var(--app-hover); }
+
+.btn-ghost { color: var(--color-text-muted); }
+.btn-ghost:hover:not(:disabled) { color: var(--color-text); background: var(--app-hover); }
+
+.icon-btn {
+  width: 32px; height: 32px; padding: 0;
+  display: inline-grid; place-items: center;
+  border-radius: var(--radius-lg);
+  color: var(--color-text-muted);
+  transition: background-color 300ms var(--ease), color 300ms var(--ease), transform 300ms var(--ease);
+}
+.icon-btn:hover { color: var(--color-text); background: var(--app-hover); }
+.icon-btn:active { transform: scale(0.94); }
+.icon-btn[aria-pressed="true"] { color: var(--color-text); }
+
+/* Theme toggle: the icon rotates between sun and moon */
+.theme-toggle { position: relative; overflow: hidden; }
+.theme-toggle .ph {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  transition: transform 500ms var(--ease), opacity 300ms var(--ease);
+}
+:root[data-theme="dark"]  .theme-toggle .ph-sun  { transform: rotate(90deg) scale(0.5); opacity: 0; }
+:root[data-theme="light"] .theme-toggle .ph-moon { transform: rotate(-90deg) scale(0.5); opacity: 0; }
+
+/* ═══════════════════════ WORKSPACE ═══════════════════════ */
+.workspace {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(340px, 420px) 1fr;
 }
 
-.empty-icon {
-  width: 52px; height: 52px;
+/* ─────────── Chat panel ─────────── */
+.chat {
+  min-height: 0;
+  display: flex; flex-direction: column;
+  border-right: 1px solid var(--color-border);
+}
+
+.messages {
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-300) var(--space-200);
+  display: flex; flex-direction: column; gap: var(--space-300);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+/* Empty chat: a composed starting view */
+.chat-empty { margin: auto 0; display: flex; flex-direction: column; gap: var(--space-300); }
+.chat-empty-head { display: flex; flex-direction: column; gap: var(--space-75); }
+.chat-empty-head p { color: var(--color-text-muted); }
+
+.suggestions { display: grid; gap: var(--space-75); }
+.suggestion {
+  display: flex; align-items: center; gap: var(--space-100);
+  width: 100%; text-align: left;
+  padding: var(--space-100);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg);
+  transition: border-color 300ms var(--ease), background-color 300ms var(--ease), transform 500ms var(--ease);
+}
+.suggestion:hover { border-color: var(--app-border-strong); background: var(--app-hover); transform: translateY(-1px); }
+.suggestion:active { transform: translateY(1px); }
+.suggestion-icon {
+  width: 32px; height: 32px; flex-shrink: 0;
+  display: grid; place-items: center;
+  border-radius: var(--radius-sm); /* 12 outer radius minus 8 gap */
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
+  color: var(--color-text-muted);
 }
+.suggestion-text { display: flex; flex-direction: column; min-width: 0; }
+.suggestion-text .caption-5 { color: var(--color-text-muted); }
+.suggestion .ph-arrow-up-right { margin-left: auto; color: var(--color-text-muted); opacity: 0; transition: opacity 300ms var(--ease); }
+.suggestion:hover .ph-arrow-up-right { opacity: 1; }
 
-#empty-state p {
-  font-size: 14px;
-  line-height: 1.6;
-  max-width: 280px;
-}
+/* Messages */
+.msg { display: flex; flex-direction: column; gap: var(--space-75); animation: rise 500ms var(--ease) both; }
+.msg.user { align-items: flex-end; }
 
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: center;
-  margin-top: 0.25rem;
-}
-.chip {
-  padding: 0.35rem 0.85rem;
+.msg-user-bubble {
+  max-width: 88%;
+  padding: var(--space-75) var(--space-100);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 20px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: border-color .15s, color .15s;
+  border-radius: var(--radius-xl);
+  white-space: pre-wrap; word-break: break-word;
 }
-.chip:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+.msg-user-bubble.from-widget {
+  display: inline-flex; align-items: flex-start; gap: var(--space-75);
+  font-family: var(--font-mono); font-size: 12px; line-height: 16px;
+  color: var(--color-text-muted);
 }
 
-/* Widget skeleton — shown while waiting for first widget_delta */
-.widget-skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 0.25rem;
+.msg-assistant { display: flex; gap: var(--space-100); align-items: flex-start; }
+.avatar {
+  width: 24px; height: 24px; flex-shrink: 0;
+  display: grid; place-items: center;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
 }
-.sk-block {
+.avatar .ph-fill { font-size: 12px; }
+.msg-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: var(--space-75); padding-top: var(--space-25); }
+
+/* Markdown inside assistant replies */
+.prose { word-break: break-word; }
+.prose > * + * { margin-top: var(--space-75); }
+.prose strong { font-weight: 600; }
+.prose ul, .prose ol { padding-left: var(--space-300); }
+.prose li + li { margin-top: var(--space-50); }
+.prose code {
+  font-family: var(--font-mono); font-size: 12px; line-height: 16px;
+  padding: var(--space-25) var(--space-50);
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+}
+.prose pre {
+  overflow-x: auto; padding: var(--space-100);
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+}
+.prose pre code { padding: 0; border: 0; background: none; }
+.prose a { color: var(--color-accent-light); }
+.prose h1, .prose h2, .prose h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+
+/* Inline status line (e.g. loading guidelines) */
+.status-line {
+  display: inline-flex; align-items: center; gap: var(--space-75);
+  color: var(--color-text-muted);
+}
+
+/* Widget card that links a reply to its preview */
+.widget-chip {
+  display: inline-flex; align-items: center; gap: var(--space-75);
+  align-self: flex-start;
+  padding: var(--space-75) var(--space-100);
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  color: var(--color-text);
+  transition: border-color 300ms var(--ease), background-color 300ms var(--ease);
+}
+.widget-chip:hover { border-color: var(--app-border-strong); background: var(--app-hover); }
+.widget-chip .ph { color: var(--color-text-muted); }
+
+/* Error, inline and specific */
+.msg-error {
+  display: flex; gap: var(--space-75); align-items: flex-start;
+  padding: var(--space-75) var(--space-100);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 40%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  border-radius: var(--radius-lg);
+  color: var(--color-danger);
+}
+.msg-error .ph { margin-top: var(--space-25); }
+
+/* Thinking skeleton (no spinners) */
+.thinking { display: flex; flex-direction: column; gap: var(--space-75); padding-top: var(--space-50); }
+.sk {
+  height: 12px; border-radius: var(--radius-full);
   background: var(--color-surface-elevated);
-  border-radius: 8px;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-@keyframes shimmer {
-  0%, 100% { opacity: 0.45; }
-  50%       { opacity: 0.9;  }
+  animation: shimmer 1600ms var(--ease) infinite;
 }
 
-/* Fade-in for morphdom new nodes — referenced directly by widget HTML */
-@keyframes _fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to   { opacity: 1; transform: none; }
+/* Composer */
+.composer { padding: var(--space-200); padding-top: 0; }
+.composer-box {
+  display: flex; flex-direction: column; gap: var(--space-75);
+  padding: var(--space-100);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  transition: border-color 300ms var(--ease);
+}
+.composer-box:focus-within { border-color: var(--app-border-strong); }
+.composer textarea {
+  width: 100%; resize: none; border: none; outline: none; background: none;
+  color: var(--color-text);
+  font-family: inherit; font-size: 14px; line-height: 20px;
+  max-height: 160px; min-height: 40px;
+}
+.composer textarea::placeholder { color: var(--color-text-muted); }
+.composer-row { display: flex; align-items: center; gap: var(--space-75); }
+.composer-hint { color: var(--color-text-muted); }
+.composer-row .btn { margin-left: auto; }
+.send-btn { width: 32px; height: 32px; padding: 0; border-radius: var(--radius-sm); /* 12 outer minus 8 inset */ }
+.send-btn .ph-stop { display: none; }
+.is-streaming .send-btn .ph-arrow-up { display: none; }
+.is-streaming .send-btn .ph-stop { display: block; }
+
+/* ─────────── Preview panel ─────────── */
+.preview {
+  min-height: 0; min-width: 0;
+  display: flex; flex-direction: column;
+  padding: var(--space-200);
+  background: var(--color-bg);
+}
+
+.preview-card {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: var(--color-bg);
+}
+.preview-card:fullscreen { border-radius: 0; border: 0; }
+
+.preview-toolbar {
+  display: flex; align-items: center; gap: var(--space-100);
+  min-height: 48px;
+  padding: var(--space-75) var(--space-75) var(--space-75) var(--space-100);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+/* Segmented control */
+.segmented {
+  display: inline-flex; padding: var(--space-25);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.segmented button {
+  display: inline-flex; align-items: center; gap: var(--space-50);
+  padding: var(--space-25) var(--space-75);
+  border-radius: var(--radius-md); /* 8 outer minus 2 inset */
+  color: var(--color-text-muted);
+  transition: background-color 300ms var(--ease), color 300ms var(--ease);
+}
+.segmented button:hover { color: var(--color-text); }
+.segmented button[aria-selected="true"] { background: var(--color-surface-elevated); color: var(--color-text); }
+
+.preview-title {
+  min-width: 0; flex: 1;
+  display: flex; align-items: center; gap: var(--space-75);
+}
+.preview-title span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.status-pill {
+  display: inline-flex; align-items: center; gap: var(--space-75);
+  padding: var(--space-25) var(--space-75);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+.status-dot { width: 6px; height: 6px; border-radius: var(--radius-full); background: var(--color-text-muted); transition: background-color 300ms var(--ease); }
+.status-pill[data-state="live"]  .status-dot { background: var(--color-accent-light); animation: pulse 1400ms var(--ease) infinite; }
+.status-pill[data-state="ready"] .status-dot { background: var(--color-success); }
+.status-pill[data-state="error"] .status-dot { background: var(--color-danger); }
+
+.toolbar-actions { display: flex; align-items: center; gap: var(--space-25); }
+
+.preview-body { flex: 1; min-height: 0; position: relative; }
+.pane { position: absolute; inset: 0; overflow: auto; scrollbar-width: thin; scrollbar-color: var(--color-border) transparent; }
+.pane[hidden] { display: none; }
+
+/* Canvas where widgets render */
+#widget-root {
+  min-height: 100%;
+  padding: var(--space-300);
+  font-family: var(--font-sans);
+  color: var(--color-text);
+}
+
+/* Code view */
+.code-pane { background: var(--color-surface); }
+.code-pane pre {
+  margin: 0; padding: var(--space-200) var(--space-300);
+  font-family: var(--font-mono); font-size: 12px; line-height: 20px;
+  color: var(--color-text);
+  white-space: pre-wrap; word-break: break-word;
+  counter-reset: line;
+}
+.code-empty { padding: var(--space-300); color: var(--color-text-muted); }
+
+/* Preview empty state */
+.preview-empty {
+  height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--space-200);
+  padding: var(--space-400) var(--space-300);
+  text-align: center;
+}
+.preview-empty-art {
+  display: grid; grid-template-columns: repeat(3, 40px); gap: var(--space-75);
+  margin-bottom: var(--space-75);
+}
+.preview-empty-art div {
+  height: 40px; display: grid; place-items: center;
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  color: var(--color-text-muted); background: var(--color-surface);
+}
+.preview-empty-art div:nth-child(2) { color: var(--color-text); border-color: var(--app-border-strong); }
+.preview-empty h2 { max-width: 420px; }
+.preview-empty p { max-width: 400px; color: var(--color-text-muted); }
+
+/* Widget skeleton, shaped like a typical widget */
+.widget-skeleton { display: flex; flex-direction: column; gap: var(--space-200); }
+.widget-skeleton .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-200); }
+.widget-skeleton .sk-card { height: 88px; border-radius: var(--radius-xl); background: var(--color-surface-elevated); animation: shimmer 1600ms var(--ease) infinite; }
+.widget-skeleton .sk-chart { height: 240px; border-radius: var(--radius-xl); background: var(--color-surface-elevated); animation: shimmer 1600ms var(--ease) infinite; }
+
+/* Mobile view switch (hidden on desktop) */
+.view-switch { display: none; }
+
+/* ═══════════════════════ MOTION ═══════════════════════ */
+@keyframes rise    { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes shimmer { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+@keyframes pulse   { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+/* Used by morphdom for nodes that stream into a widget */
+@keyframes _fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+  .msg, .suggestion { transform: none !important; }
+}
+
+/* ═══════════════════════ RESPONSIVE ═══════════════════════ */
+@media (max-width: 860px) {
+  .app { grid-template-rows: auto auto 1fr; }
+  .workspace { grid-template-columns: 1fr; }
+  .chat { border-right: 0; }
+  .preview { padding: var(--space-100); }
+
+  .view-switch {
+    display: flex; justify-content: center;
+    padding: var(--space-75) var(--space-200);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .view-switch .segmented { width: 100%; }
+  .view-switch .segmented button { flex: 1; justify-content: center; padding: var(--space-50) var(--space-75); }
+
+  body[data-view="chat"] .preview { display: none; }
+  body[data-view="preview"] .chat { display: none; }
+
+  .brand-model, .brand-divider, .header-new-label { display: none; }
+  #widget-root { padding: var(--space-200); }
+  .preview-toolbar .status-pill span:last-child { display: none; }
+}
+
+@media (max-width: 420px) {
+  .toolbar-actions .hide-xs { display: none; }
+  .composer-hint { display: none; }
 }
 </style>
 </head>
-<body>
+<body data-view="chat">
+<a class="skip-link button-sm" href="#prompt">Skip to the prompt</a>
 
-<!-- ════════════════ Chat Panel ════════════════ -->
-<div id="chat-panel">
-  <div id="chat-header">
-    <div class="logo">✦</div>
-    <h1>Generative UI</h1>
-  </div>
+<div class="app">
+  <!-- ═══════════ Header ═══════════ -->
+  <header class="app-header">
+    <a class="brand" href="/" aria-label="Generative UI home">
+      <span class="brand-mark" aria-hidden="true"><i class="ph-fill ph-sparkle"></i></span>
+      <span class="title-4">Generative UI</span>
+    </a>
+    <span class="brand-divider" aria-hidden="true"></span>
+    <span class="brand-model caption-4" title="Model powering this demo"><span class="dot"></span>Claude Haiku</span>
 
-  <div id="messages"></div>
-
-  <div id="input-area">
-    <div id="input-box">
-      <textarea id="user-input" rows="1"
-        placeholder="Ask for a chart, calculator, diagram..."></textarea>
-      <button id="send-btn" title="Send (Enter)">
-        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+    <nav class="header-actions" aria-label="App actions">
+      <button class="btn btn-ghost button-sm" id="new-chat" type="button">
+        <i class="ph ph-plus" aria-hidden="true"></i><span class="header-new-label">New chat</span>
       </button>
-    </div>
-    <p class="hint">Enter to send · Shift+Enter for newline</p>
-  </div>
-</div>
+      <a class="icon-btn" href="https://github.com/KiranChandY/Generative-UI-demo" target="_blank" rel="noopener" aria-label="View source on GitHub">
+        <i class="ph ph-github-logo" aria-hidden="true"></i>
+      </a>
+      <button class="icon-btn theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme">
+        <i class="ph ph-moon" aria-hidden="true"></i>
+        <i class="ph ph-sun" aria-hidden="true"></i>
+      </button>
+    </nav>
+  </header>
 
-<!-- ════════════════ Widget Panel ════════════════ -->
-<div id="widget-panel">
-  <div id="widget-toolbar">
-    <span id="widget-name">No widget yet</span>
-    <div id="widget-status">
-      <div class="status-dot" id="status-dot"></div>
-      <span id="status-label">Idle</span>
+  <!-- Mobile only: switch between chat and preview -->
+  <div class="view-switch">
+    <div class="segmented" role="tablist" aria-label="View">
+      <button class="button-xsm" role="tab" data-view="chat" aria-selected="true" type="button"><i class="ph ph-chat-circle" aria-hidden="true"></i>Chat</button>
+      <button class="button-xsm" role="tab" data-view="preview" aria-selected="false" type="button"><i class="ph ph-browser" aria-hidden="true"></i>Preview</button>
     </div>
   </div>
 
-  <div id="widget-root">
-    <div id="empty-state">
-      <div class="empty-icon">⚡</div>
-      <p>Ask for any visual — charts, calculators, diagrams, timers, dashboards, or games.</p>
-      <div class="chips">
-        <div class="chip" onclick="quickSend('compound interest calculator')">Compound interest calculator</div>
-        <div class="chip" onclick="quickSend('bar chart of monthly sales Jan-Jun with made up data')">Sales bar chart</div>
-        <div class="chip" onclick="quickSend('pomodoro timer')">Pomodoro timer</div>
-        <div class="chip" onclick="quickSend('flowchart of how HTTP requests work')">HTTP flowchart</div>
-        <div class="chip" onclick="quickSend('dashboard with 4 metric cards and a line chart')">Dashboard</div>
-        <div class="chip" onclick="quickSend('color palette explorer with HSL sliders')">Color explorer</div>
+  <!-- ═══════════ Workspace ═══════════ -->
+  <main class="workspace" id="main">
+    <!-- Chat -->
+    <section class="chat" aria-label="Conversation">
+      <div class="messages" id="messages" aria-live="polite">
+        <div class="chat-empty" id="chat-empty">
+          <div class="chat-empty-head">
+            <h1 class="heading-5">What should we build?</h1>
+            <p class="body-6">Describe an interface in plain English. Claude writes it and you watch it render in the preview, live and fully interactive.</p>
+          </div>
+          <div class="suggestions">
+            <button class="suggestion" type="button" data-prompt="Build a compound interest calculator with sliders for principal, rate and years">
+              <span class="suggestion-icon"><i class="ph ph-calculator" aria-hidden="true"></i></span>
+              <span class="suggestion-text"><span class="title-4">Compound interest calculator</span><span class="caption-5">Sliders that update the result instantly</span></span>
+              <i class="ph ph-arrow-up-right" aria-hidden="true"></i>
+            </button>
+            <button class="suggestion" type="button" data-prompt="Show a bar chart of monthly sales from January to June with realistic sample data">
+              <span class="suggestion-icon"><i class="ph ph-chart-bar" aria-hidden="true"></i></span>
+              <span class="suggestion-text"><span class="title-4">Monthly sales chart</span><span class="caption-5">Six months of sample revenue</span></span>
+              <i class="ph ph-arrow-up-right" aria-hidden="true"></i>
+            </button>
+            <button class="suggestion" type="button" data-prompt="Draw a flowchart of how an HTTP request travels from browser to server and back">
+              <span class="suggestion-icon"><i class="ph ph-flow-arrow" aria-hidden="true"></i></span>
+              <span class="suggestion-text"><span class="title-4">HTTP request flowchart</span><span class="caption-5">From the browser to the server and back</span></span>
+              <i class="ph ph-arrow-up-right" aria-hidden="true"></i>
+            </button>
+            <button class="suggestion" type="button" data-prompt="Create a dashboard with four metric cards and a line chart of weekly active users">
+              <span class="suggestion-icon"><i class="ph ph-squares-four" aria-hidden="true"></i></span>
+              <span class="suggestion-text"><span class="title-4">Metrics dashboard</span><span class="caption-5">Four KPI cards and a trend line</span></span>
+              <i class="ph ph-arrow-up-right" aria-hidden="true"></i>
+            </button>
+            <button class="suggestion" type="button" data-prompt="Make a pomodoro timer with start, pause and reset">
+              <span class="suggestion-icon"><i class="ph ph-timer" aria-hidden="true"></i></span>
+              <span class="suggestion-text"><span class="title-4">Pomodoro timer</span><span class="caption-5">25 minute focus sessions with breaks</span></span>
+              <i class="ph ph-arrow-up-right" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
+
+      <form class="composer" id="composer" autocomplete="off">
+        <div class="composer-box">
+          <label class="sr-only" for="prompt">Describe what you want to build</label>
+          <textarea id="prompt" rows="2" placeholder="Ask for a chart, calculator, diagram or game"></textarea>
+          <div class="composer-row">
+            <span class="composer-hint caption-5">Enter to send · Shift + Enter for a new line</span>
+            <button class="btn btn-primary send-btn" id="send-btn" type="submit" aria-label="Send">
+              <i class="ph ph-arrow-up" aria-hidden="true"></i>
+              <i class="ph-fill ph-stop" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- Preview -->
+    <section class="preview" aria-label="Preview">
+      <div class="preview-card" id="preview-card">
+        <div class="preview-toolbar">
+          <div class="segmented" role="tablist" aria-label="Preview mode">
+            <button class="button-xsm" role="tab" id="tab-preview" aria-controls="pane-preview" aria-selected="true" type="button"><i class="ph ph-eye" aria-hidden="true"></i>Preview</button>
+            <button class="button-xsm" role="tab" id="tab-code" aria-controls="pane-code" aria-selected="false" type="button"><i class="ph ph-code" aria-hidden="true"></i>Code</button>
+          </div>
+
+          <div class="preview-title">
+            <span class="title-4" id="widget-name">Untitled</span>
+          </div>
+
+          <div class="status-pill caption-4" id="status" data-state="idle" role="status">
+            <span class="status-dot"></span><span id="status-label">Idle</span>
+          </div>
+
+          <div class="toolbar-actions">
+            <button class="icon-btn" id="btn-copy" type="button" aria-label="Copy widget code" title="Copy code" disabled><i class="ph ph-copy" aria-hidden="true"></i></button>
+            <button class="icon-btn hide-xs" id="btn-open" type="button" aria-label="Open widget in a new tab" title="Open in new tab" disabled><i class="ph ph-arrow-square-out" aria-hidden="true"></i></button>
+            <button class="icon-btn hide-xs" id="btn-full" type="button" aria-label="Enter full screen" title="Full screen"><i class="ph ph-corners-out" aria-hidden="true"></i></button>
+          </div>
+        </div>
+
+        <div class="preview-body">
+          <div class="pane" id="pane-preview" role="tabpanel" aria-labelledby="tab-preview">
+            <div id="widget-root">
+              <div class="preview-empty" id="preview-empty">
+                <div class="preview-empty-art" aria-hidden="true">
+                  <div><i class="ph ph-chart-line-up"></i></div>
+                  <div><i class="ph ph-cursor-click"></i></div>
+                  <div><i class="ph ph-graph"></i></div>
+                </div>
+                <h2 class="heading-6">Your interface appears here</h2>
+                <p class="body-6">Pick a suggestion or describe your own idea. The widget streams in piece by piece while Claude writes it, and every button and slider works.</p>
+              </div>
+            </div>
+          </div>
+          <div class="pane code-pane" id="pane-code" role="tabpanel" aria-labelledby="tab-code" hidden>
+            <p class="code-empty body-6" id="code-empty">The HTML for your widget shows up here as it streams.</p>
+            <pre><code id="code-view"></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
 </div>
 
-<!-- morphdom: smooth DOM diffing during streaming -->
+<!-- morphdom: smooth DOM diffing during streaming · marked + DOMPurify: safe markdown in replies -->
 <script src="https://cdn.jsdelivr.net/npm/morphdom@2.7.4/dist/morphdom-umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 
 <script>
 // ── DOM refs ──────────────────────────────────────────────────────────────
-const messagesEl  = document.getElementById('messages');
-const inputEl     = document.getElementById('user-input');
-const sendBtn     = document.getElementById('send-btn');
-const widgetRoot  = document.getElementById('widget-root');
-const widgetName  = document.getElementById('widget-name');
-const statusDot   = document.getElementById('status-dot');
-const statusLabel = document.getElementById('status-label');
+const $ = (id) => document.getElementById(id);
+const messagesEl  = $('messages');
+const inputEl     = $('prompt');
+const composerEl  = $('composer');
+const sendBtn     = $('send-btn');
+const widgetName  = $('widget-name');
+const statusEl    = $('status');
+const statusLabel = $('status-label');
+const codeView    = $('code-view');
+const codeEmpty   = $('code-empty');
+const paneCode    = $('pane-code');
+const panePreview = $('pane-preview');
+const previewCard = $('preview-card');
+const btnCopy = $('btn-copy'), btnOpen = $('btn-open'), btnFull = $('btn-full');
+// widget-root is replaced by morphdom-safe updates, so always look it up fresh
+const widgetRoot = () => $('widget-root');
 
 // ── State ─────────────────────────────────────────────────────────────────
-let history     = [];   // {role, content}[] sent to backend
+let history     = [];    // {role, content}[] sent to the backend
 let streaming   = false;
+let controller  = null;  // AbortController for the active request
 let renderTimer = null;
 let pendingHTML = null;
+let lastWidget  = null;  // { html, title } of the most recent complete widget
 
-// ── Status bar ────────────────────────────────────────────────────────────
-function setStatus(active, text) {
-  statusDot.className = 'status-dot' + (active ? ' live' : '');
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ── Theme ─────────────────────────────────────────────────────────────────
+const themeBtn = $('theme-toggle');
+function currentTheme() { return document.documentElement.getAttribute('data-theme'); }
+function syncThemeButton() {
+  themeBtn.setAttribute('aria-label', currentTheme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+}
+themeBtn.addEventListener('click', () => {
+  const next = currentTheme() === 'dark' ? 'light' : 'dark';
+  const before = readWidgetVars();
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('gui-theme', next); } catch (e) {}
+  syncThemeButton();
+  // HTML and SVG follow the CSS variables on their own. Canvas charts resolved
+  // the colors once, so swap the old theme's values for the new ones in place.
+  recolorCharts(before, readWidgetVars());
+});
+
+function readWidgetVars() {
+  const cs = getComputedStyle(document.documentElement);
+  return WIDGET_VARS.map(v => cs.getPropertyValue(v).trim().toLowerCase());
+}
+
+function recolorCharts(before, after) {
+  if (!window.Chart || !Chart.instances) return;
+  const pairs = before.map((b, i) => [b, after[i]]).filter(([b, a]) => b && a && b !== a)
+                      .sort((x, y) => y[0].length - x[0].length);
+  const swap = (str) => {
+    const low = str.toLowerCase();
+    for (const [b, a] of pairs) if (low.startsWith(b)) return a + str.slice(b.length); // keeps hex alpha suffixes
+    return str;
+  };
+  const seen = new WeakSet();
+  const walk = (obj, depth) => {
+    if (!obj || typeof obj !== 'object' || depth > 8 || seen.has(obj) || obj instanceof Node) return;
+    seen.add(obj);
+    for (const k of Object.keys(obj)) {
+      if (k.startsWith('_')) continue;
+      const v = obj[k];
+      if (typeof v === 'string') obj[k] = swap(v);
+      else if (Array.isArray(v)) v.forEach((x, i) => { if (typeof x === 'string') v[i] = swap(x); else walk(x, depth + 1); });
+      else walk(v, depth + 1);
+    }
+  };
+  if (typeof Chart.defaults.color === 'string') Chart.defaults.color = swap(Chart.defaults.color);
+  if (typeof Chart.defaults.borderColor === 'string') Chart.defaults.borderColor = swap(Chart.defaults.borderColor);
+  Object.values(Chart.instances).forEach(chart => {
+    const cfg = chart.config._config || chart.config;
+    walk(cfg.data, 0);
+    walk(cfg.options, 0);
+    chart.update('none');
+  });
+}
+syncThemeButton();
+
+// ── Mobile view switch ────────────────────────────────────────────────────
+function setView(view) {
+  document.body.dataset.view = view;
+  document.querySelectorAll('.view-switch [role=tab]').forEach(b =>
+    b.setAttribute('aria-selected', String(b.dataset.view === view)));
+}
+document.querySelectorAll('.view-switch [role=tab]').forEach(b =>
+  b.addEventListener('click', () => setView(b.dataset.view)));
+const isNarrow = () => window.matchMedia('(max-width: 860px)').matches;
+
+// ── Preview / Code tabs ───────────────────────────────────────────────────
+function setTab(tab) {
+  const code = tab === 'code';
+  $('tab-preview').setAttribute('aria-selected', String(!code));
+  $('tab-code').setAttribute('aria-selected', String(code));
+  panePreview.hidden = code;
+  paneCode.hidden = !code;
+}
+$('tab-preview').addEventListener('click', () => setTab('preview'));
+$('tab-code').addEventListener('click', () => setTab('code'));
+
+// ── Status ────────────────────────────────────────────────────────────────
+function setStatus(state, text) {
+  statusEl.dataset.state = state;   // idle | live | ready | error
   statusLabel.textContent = text;
 }
 
-// ── Message helpers ───────────────────────────────────────────────────────
-function addBubble(role, text) {
-  document.querySelector('.typing')?.remove();
+// ── Messages ──────────────────────────────────────────────────────────────
+function clearEmptyChat() { $('chat-empty')?.remove(); }
+function scrollChat() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+
+function renderMarkdown(text) {
+  try { return DOMPurify.sanitize(marked.parse(text, { breaks: true })); }
+  catch (e) { const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
+}
+
+function addUserMessage(text, fromWidget = false) {
+  clearEmptyChat();
   const row = document.createElement('div');
-  row.className = `msg-row ${role}`;
+  row.className = 'msg user';
   const bub = document.createElement('div');
-  bub.className = `bubble ${role}`;
-  bub.textContent = text;
+  bub.className = 'msg-user-bubble body-6' + (fromWidget ? ' from-widget' : '');
+  if (fromWidget) {
+    bub.innerHTML = '<i class="ph ph-cursor-click" aria-hidden="true"></i>';
+    const span = document.createElement('span');
+    span.textContent = text;
+    bub.appendChild(span);
+  } else {
+    bub.textContent = text;
+  }
   row.appendChild(bub);
   messagesEl.appendChild(row);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-  return bub;
+  scrollChat();
 }
 
-function addStatus(text) {
+/** Creates an assistant turn and returns helpers to fill it in. */
+function addAssistantTurn() {
+  clearEmptyChat();
   const row = document.createElement('div');
-  row.className = 'msg-row assistant';
-  const bub = document.createElement('div');
-  bub.className = 'bubble status-msg';
-  bub.textContent = text;
-  row.appendChild(bub);
+  row.className = 'msg';
+  row.innerHTML = `
+    <div class="msg-assistant">
+      <span class="avatar" aria-hidden="true"><i class="ph-fill ph-sparkle"></i></span>
+      <div class="msg-body">
+        <div class="thinking" aria-label="Claude is thinking">
+          <div class="sk" style="width:72%"></div>
+          <div class="sk" style="width:48%"></div>
+        </div>
+      </div>
+    </div>`;
   messagesEl.appendChild(row);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-}
+  scrollChat();
 
-function showTyping() {
-  if (document.querySelector('.typing')) return;
-  const row = document.createElement('div');
-  row.className = 'msg-row assistant';
-  row.innerHTML = '<div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
-  messagesEl.appendChild(row);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-}
+  const body = row.querySelector('.msg-body');
+  let prose = null;
+  const dropThinking = () => body.querySelector('.thinking')?.remove();
 
-// ── Widget skeleton ───────────────────────────────────────────────────────
-/**
- * Shown during the load_guidelines round-trip so the widget panel looks
- * active before the first real HTML arrives.
- */
-function showWidgetSkeleton() {
-  if (document.getElementById('widget-skeleton')) return;
-  document.getElementById('empty-state')?.remove();
-  const sk = document.createElement('div');
-  sk.id = 'widget-skeleton';
-  sk.className = 'widget-skeleton';
-  sk.innerHTML = `
-    <div class="sk-block" style="height:18px;width:42%"></div>
-    <div class="sk-block" style="height:220px"></div>
-    <div class="sk-block" style="height:12px;width:72%"></div>
-    <div class="sk-block" style="height:12px;width:55%"></div>
-  `;
-  widgetRoot.appendChild(sk);
-}
-
-function clearSkeleton() {
-  document.getElementById('widget-skeleton')?.remove();
+  return {
+    text(full) {
+      dropThinking();
+      if (!prose) { prose = document.createElement('div'); prose.className = 'prose body-6'; body.appendChild(prose); }
+      prose.innerHTML = renderMarkdown(full);
+      scrollChat();
+    },
+    status(text) {
+      const el = document.createElement('div');
+      el.className = 'status-line caption-5';
+      el.innerHTML = '<i class="ph ph-book-open-text" aria-hidden="true"></i>';
+      el.appendChild(document.createTextNode(text));
+      body.appendChild(el);
+      prose = null; // later text starts a new paragraph block after the status
+      scrollChat();
+    },
+    widget(title) {
+      dropThinking();
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'widget-chip title-4';
+      chip.innerHTML = '<i class="ph ph-browser" aria-hidden="true"></i>';
+      chip.appendChild(document.createTextNode(title));
+      chip.addEventListener('click', () => { setTab('preview'); if (isNarrow()) setView('preview'); });
+      body.appendChild(chip);
+      prose = null;
+      scrollChat();
+    },
+    error(text) {
+      dropThinking();
+      const el = document.createElement('div');
+      el.className = 'msg-error body-6';
+      el.innerHTML = '<i class="ph ph-warning-circle" aria-hidden="true"></i>';
+      const span = document.createElement('span');
+      span.textContent = text;
+      el.appendChild(span);
+      body.appendChild(el);
+      scrollChat();
+    },
+    finish() { dropThinking(); },
+  };
 }
 
 // ── Widget rendering ──────────────────────────────────────────────────────
-
-/**
- * morphdom diff: only changed DOM nodes are updated.
- * New nodes get a CSS fade-in. Unchanged nodes are skipped entirely.
- */
-function renderWidget(html) {
-  clearSkeleton();
-  document.getElementById('empty-state')?.remove();
-
-  const next = document.createElement('div');
-  next.id = 'widget-root';
-  next.innerHTML = html;
-
-  morphdom(widgetRoot, next, {
-    onBeforeElUpdated(from, to) {
-      if (from.isEqualNode(to)) return false;
-      return true;
-    },
-    onNodeAdded(node) {
-      if (node.nodeType === 1 && node.tagName !== 'STYLE' && node.tagName !== 'SCRIPT') {
-        node.style.animation = '_fadeIn 0.3s ease both';
-      }
-      return node;
-    }
-  });
+function showWidgetSkeleton() {
+  const root = widgetRoot();
+  if (root.querySelector('.widget-skeleton')) return;
+  root.innerHTML = `
+    <div class="widget-skeleton" aria-label="Loading widget">
+      <div class="sk" style="width:32%;height:20px"></div>
+      <div class="row"><div class="sk-card"></div><div class="sk-card"></div><div class="sk-card"></div></div>
+      <div class="sk-chart"></div>
+    </div>`;
 }
 
 /**
- * Debounced render — batches widget_delta events to ~50ms so morphdom
- * isn't thrashing on every single token but updates feel live.
+ * morphdom diff: only changed DOM nodes are updated, so the widget grows
+ * without flicker while it streams. New nodes fade in.
  */
+function renderWidget(html) {
+  const next = document.createElement('div');
+  next.id = 'widget-root';
+  next.innerHTML = html;
+  morphdom(widgetRoot(), next, {
+    onBeforeElUpdated(from, to) { return !from.isEqualNode(to); },
+    onNodeAdded(node) {
+      if (!reducedMotion && node.nodeType === 1 && node.tagName !== 'STYLE' && node.tagName !== 'SCRIPT') {
+        node.style.animation = '_fadeIn 500ms cubic-bezier(0.22,1,0.36,1) both';
+      }
+      return node;
+    },
+  });
+}
+
+/** Batch widget_delta events to ~50ms so updates feel live without thrashing. */
 function scheduleRender(html) {
   pendingHTML = html;
   if (renderTimer) return;
@@ -511,89 +966,152 @@ function scheduleRender(html) {
 }
 
 /**
- * Run <script> tags inside the widget.
- * Browsers don't execute scripts set via innerHTML — we must replace them.
- * Called only on widget_final (after streaming ends), never mid-stream.
+ * Browsers skip scripts set via innerHTML, so replace each one to run it.
+ * Scripts run in order, and each external library finishes loading before
+ * the next script runs (otherwise "Chart is not defined").
  */
-function runScripts() {
-  widgetRoot.querySelectorAll('script').forEach(old => {
+async function runScripts() {
+  const scripts = [...widgetRoot().querySelectorAll('script')];
+  for (const old of scripts) {
     const s = document.createElement('script');
-    if (old.src) { s.src = old.src; }
-    else { s.textContent = old.textContent; }
-    old.parentNode.replaceChild(s, old);
-  });
+    if (old.src) {
+      s.src = old.src;
+      await new Promise(resolve => { s.onload = s.onerror = resolve; old.replaceWith(s); });
+    } else {
+      s.textContent = old.textContent;
+      old.replaceWith(s);
+    }
+  }
 }
 
-// ── Two-way bridge ────────────────────────────────────────────────────────
-/**
- * Widgets call window.sendToAgent(data) to send interaction data back.
- * The message is pushed to history here; doSend(null) signals "just fire
- * the request, don't re-read or re-push anything".
- */
-window.sendToAgent = function(data) {
-  const text = `[Widget interaction] ${JSON.stringify(data)}`;
-  history.push({ role: 'user', content: text });
-  addBubble('user', text);
-  doSend(null);  // null = history already updated
+function setCode(html) {
+  codeView.textContent = html;
+  codeEmpty.hidden = !!html;
+  if (!paneCode.hidden) paneCode.scrollTop = paneCode.scrollHeight;
+}
+
+function setWidgetActions(enabled) {
+  [btnCopy, btnOpen].forEach(b => b.disabled = !enabled);
+}
+
+// Toolbar actions
+
+btnCopy.addEventListener('click', async () => {
+  if (!lastWidget) return;
+  try {
+    await navigator.clipboard.writeText(lastWidget.html);
+    btnCopy.innerHTML = '<i class="ph ph-check" aria-hidden="true"></i>';
+    btnCopy.setAttribute('aria-label', 'Code copied');
+    setTimeout(() => {
+      btnCopy.innerHTML = '<i class="ph ph-copy" aria-hidden="true"></i>';
+      btnCopy.setAttribute('aria-label', 'Copy widget code');
+    }, 1600);
+  } catch (e) {
+    setStatus('error', 'Copy blocked by the browser');
+  }
+});
+
+const WIDGET_VARS = ['--color-bg','--color-surface','--color-surface-elevated','--color-text','--color-text-muted',
+  '--color-accent','--color-accent-light','--color-on-accent','--color-border','--color-success','--color-warning',
+  '--color-danger','--color-chart-1','--color-chart-2','--color-chart-3','--color-chart-4','--color-chart-5'];
+
+btnOpen.addEventListener('click', () => {
+  if (!lastWidget) return;
+  const cs = getComputedStyle(document.documentElement);
+  const vars = WIDGET_VARS.map(v => `${v}:${cs.getPropertyValue(v).trim()};`).join('');
+  const doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${(lastWidget.title || 'Widget').replace(/</g, '')}</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>:root{${vars}color-scheme:${currentTheme()}}*{box-sizing:border-box}body{margin:0;padding:24px;background:var(--color-bg);color:var(--color-text);font-family:'Geist',system-ui,sans-serif}</style>
+<script>window.sendToAgent=function(d){console.log('sendToAgent',d)}<\/script></head><body>${lastWidget.html}</body></html>`;
+  const url = URL.createObjectURL(new Blob([doc], { type: 'text/html' }));
+  window.open(url, '_blank', 'noopener');
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+});
+
+btnFull.addEventListener('click', () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else previewCard.requestFullscreen?.();
+});
+document.addEventListener('fullscreenchange', () => {
+  const on = !!document.fullscreenElement;
+  btnFull.innerHTML = `<i class="ph ${on ? 'ph-corners-in' : 'ph-corners-out'}" aria-hidden="true"></i>`;
+  btnFull.setAttribute('aria-label', on ? 'Exit full screen' : 'Enter full screen');
+});
+
+// ── Two way bridge ────────────────────────────────────────────────────────
+/** Widgets call window.sendToAgent(data) to send interactions back to Claude. */
+window.sendToAgent = function (data) {
+  if (streaming) return;
+  const json = JSON.stringify(data);
+  history.push({ role: 'user', content: `[Widget interaction] ${json}` });
+  addUserMessage(json, true);
+  if (isNarrow()) setView('chat');
+  doSend(null);   // null = history already updated
 };
 
-// ── Suggestion chips ──────────────────────────────────────────────────────
-function quickSend(text) {
-  doSend(text);
-}
+// ── Suggestions ───────────────────────────────────────────────────────────
+document.querySelectorAll('.suggestion').forEach(b =>
+  b.addEventListener('click', () => doSend(b.dataset.prompt)));
 
-// ── Main send function ────────────────────────────────────────────────────
+// ── New chat ──────────────────────────────────────────────────────────────
+$('new-chat').addEventListener('click', () => {
+  if (streaming && controller) controller.abort();
+  location.reload();
+});
+
+// ── Main send ─────────────────────────────────────────────────────────────
 /**
- * overrideText === null    → called from sendToAgent; history already updated,
- *                            skip the text-collection step entirely.
- * overrideText === string  → use this text directly (quickSend / chip clicks).
- * overrideText === undefined → read from the textarea (button / Enter key).
+ * overrideText === null      → from sendToAgent; history already updated.
+ * overrideText === string    → use this text (suggestion click).
+ * overrideText === undefined → read from the textarea.
  */
 async function doSend(overrideText) {
   if (streaming) return;
 
-  // Collect + push the user message unless the caller already did it (null).
   if (overrideText !== null) {
     const text = overrideText !== undefined ? overrideText : inputEl.value.trim();
-    if (!text) return;
-    addBubble('user', text);
+    if (!text) { inputEl.focus(); return; }
+    addUserMessage(text);
     history.push({ role: 'user', content: text });
     inputEl.value = '';
-    inputEl.style.height = 'auto';
+    autoSize();
   }
 
   streaming = true;
-  sendBtn.disabled = true;
-  setStatus(true, 'Thinking...');
-  showTyping();
+  controller = new AbortController();
+  document.body.classList.add('is-streaming');
+  sendBtn.setAttribute('aria-label', 'Stop generating');
+  setStatus('live', 'Thinking');
 
-  let assistantBubble = null;
-  let assistantText   = '';
-  let skeletonShown   = false;
+  const turn = addAssistantTurn();
+  let assistantText = '';   // text of the current paragraph block
+  let fullText = '';        // all reply text, saved to history
+  let skeletonShown = false;
+  let widgetStarted = false;
 
   try {
     const resp = await fetch('/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages: history }),
+      signal: controller.signal,
     });
-
     if (!resp.ok) {
-      const msg = await resp.text().catch(() => `HTTP ${resp.status}`);
-      throw new Error(msg || `Server error ${resp.status}`);
+      const msg = await resp.text().catch(() => '');
+      throw new Error(msg || `The server responded with ${resp.status}.`);
     }
 
-    const reader  = resp.body.getReader();
+    const reader = resp.body.getReader();
     const decoder = new TextDecoder();
     let buf = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-
       buf += decoder.decode(value, { stream: true });
       const parts = buf.split('\n\n');
-      buf = parts.pop(); // keep incomplete trailing chunk
+      buf = parts.pop();
 
       for (const part of parts) {
         if (!part.startsWith('data: ')) continue;
@@ -601,91 +1119,113 @@ async function doSend(overrideText) {
         try { ev = JSON.parse(part.slice(6)); } catch { continue; }
 
         switch (ev.type) {
-
-          // ── Claude text response ───────────────────────────────────
           case 'text':
-            if (!assistantBubble) {
-              document.querySelector('.typing')?.remove();
-              assistantBubble = addBubble('assistant', '');
-            }
             assistantText += ev.text;
-            assistantBubble.textContent = assistantText;
-            messagesEl.scrollTop = messagesEl.scrollHeight;
+            fullText += ev.text;
+            turn.text(assistantText);
             break;
 
-          // ── Internal status (e.g. "Loading chart guidelines...") ───
           case 'status':
-            addStatus(ev.text);
-            setStatus(true, ev.text);
-            if (!skeletonShown) {
-              showWidgetSkeleton();
-              skeletonShown = true;
-            }
+            turn.status(ev.text);
+            assistantText = '';
+            setStatus('live', 'Preparing');
+            if (!skeletonShown) { showWidgetSkeleton(); skeletonShown = true; }
             break;
 
-          // ── Widget HTML streaming in, token by token ───────────────
           case 'widget_delta':
-            setStatus(true, 'Rendering...');
+            if (!widgetStarted) {
+              widgetStarted = true;
+              widgetName.textContent = 'Building…';
+              setWidgetActions(false);
+              if (isNarrow()) setView('preview');
+            }
+            setStatus('live', 'Streaming');
             scheduleRender(ev.html);
+            setCode(ev.html);
             break;
 
-          // ── Widget complete — final HTML + run scripts ─────────────
           case 'widget_final':
             if (renderTimer) { clearTimeout(renderTimer); renderTimer = null; }
-            widgetName.textContent = ev.title || 'Widget';
+            lastWidget = { html: ev.html, title: sentenceCase(ev.title || 'Widget') };
+            widgetName.textContent = lastWidget.title;
             renderWidget(ev.html);
             runScripts();
-            setStatus(false, 'Ready');
+            setCode(ev.html);
+            setWidgetActions(true);
+            turn.widget(lastWidget.title);
+            setStatus('ready', 'Ready');
+            assistantText = '';   // text after a widget starts a fresh block
             break;
 
-          // ── Error ──────────────────────────────────────────────────
           case 'error':
-            document.querySelector('.typing')?.remove();
-            addBubble('assistant', `Error: ${ev.text}`);
-            setStatus(false, 'Error');
+            turn.error(friendlyError(ev.text));
+            setStatus('error', 'Error');
             break;
 
-          // ── Stream finished ────────────────────────────────────────
           case 'done':
-            if (assistantText) {
-              history.push({ role: 'assistant', content: assistantText });
-            }
             break;
         }
       }
     }
+    // Keep the full reply text in history for context on the next turn.
+    if (fullText.trim()) history.push({ role: 'assistant', content: fullText.trim() });
 
   } catch (err) {
-    document.querySelector('.typing')?.remove();
-    addBubble('assistant', `Connection error: ${err.message}`);
-    setStatus(false, 'Error');
-  } finally {
-    streaming      = false;
-    sendBtn.disabled = false;
-    pendingHTML    = null;
-    if (renderTimer) { clearTimeout(renderTimer); renderTimer = null; }
-    clearSkeleton(); // remove skeleton if no widget arrived (e.g. on error)
-    if (['Thinking...', 'Rendering...'].includes(statusLabel.textContent)) {
-      setStatus(false, 'Idle');
+    if (err.name === 'AbortError') {
+      turn.error('Stopped. Send a new message to continue.');
+      setStatus('idle', 'Stopped');
+    } else {
+      turn.error(friendlyError(err.message));
+      setStatus('error', 'Error');
     }
+  } finally {
+    turn.finish();
+    streaming = false;
+    controller = null;
+    document.body.classList.remove('is-streaming');
+    sendBtn.setAttribute('aria-label', 'Send');
+    pendingHTML = null;
+    if (renderTimer) { clearTimeout(renderTimer); renderTimer = null; }
+    widgetRoot().querySelector('.widget-skeleton')?.remove();
+    if (statusEl.dataset.state === 'live') setStatus(lastWidget ? 'ready' : 'idle', lastWidget ? 'Ready' : 'Idle');
+    if (!widgetRoot().children.length) restorePreviewEmpty();
   }
 }
 
-// ── Input auto-resize ─────────────────────────────────────────────────────
-inputEl.addEventListener('input', () => {
+function restorePreviewEmpty() {
+  widgetRoot().innerHTML = `
+    <div class="preview-empty">
+      <h2 class="heading-6">Nothing to preview yet</h2>
+      <p class="body-6">Ask for something visual, like a chart or a calculator, and it will render here.</p>
+    </div>`;
+}
+
+function sentenceCase(t) { t = String(t).trim(); return t.charAt(0).toUpperCase() + t.slice(1); }
+
+function friendlyError(text) {
+  const t = String(text || '');
+  if (/credit balance|spend limit|usage limit|billing/i.test(t)) return 'This demo has reached its usage limit for now. Please try again later.';
+  if (/authentication|api[_ ]key|x-api-key/i.test(t)) return 'The server is missing a valid Anthropic API key. Add ANTHROPIC_API_KEY to the deployment and redeploy.';
+  if (/not_found_error|model/i.test(t) && /not found|invalid/i.test(t)) return 'The configured model is not available. Set MODEL to a Claude model your key can use.';
+  if (/overloaded|rate limit|429|529/i.test(t)) return 'Claude is busy right now. Wait a few seconds and send your message again.';
+  if (/Failed to fetch|NetworkError/i.test(t)) return 'Could not reach the server. Check your connection and try again.';
+  return t || 'Something went wrong. Please try again.';
+}
+
+// ── Composer ──────────────────────────────────────────────────────────────
+function autoSize() {
   inputEl.style.height = 'auto';
-  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
-});
-
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 160) + 'px';
+}
+inputEl.addEventListener('input', autoSize);
 inputEl.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    doSend();
-  }
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); doSend(); }
 });
-
-sendBtn.addEventListener('click', () => doSend());
+composerEl.addEventListener('submit', e => {
+  e.preventDefault();
+  if (streaming) { controller?.abort(); return; }
+  doSend();
+});
 </script>
-
 </body>
 </html>

@@ -47,7 +47,7 @@ TOOLS = [
                         "HTML fragment to render. Rules: "
                         "1. No DOCTYPE, <html>, <head>, or <body> tags. "
                         "2. Order: <style> block first, then HTML content, then <script> last. "
-                        "3. Use only CSS variables for colors (e.g. var(--color-accent)). "
+                        "3. Use only CSS variables for colors (e.g. var(--color-accent)) so it works in dark and light themes. "
                         "4. No gradients, shadows, or blur effects. "
                         "For SVG: start directly with <svg> tag."
                     )
