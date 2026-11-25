@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1200px; height: 852px; background: #000; overflow: hidden; }
+  body { position: relative; font-family: 'Geist', sans-serif; color: #EDEDED; -webkit-font-smoothing: antialiased; }
+
+  /* faint engineering grid, fading out toward the edges */
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.055) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-position: -1px -1px;
+    -webkit-mask-image: radial-gradient(ellipse 75% 70% at 62% 34%, #000 30%, transparent 78%);
+  }
+  .glow {
+    position: absolute; width: 760px; height: 420px; left: 360px; top: 40px;
+    background: radial-gradient(ellipse at center, rgba(10,114,239,0.22), transparent 65%);
+    filter: blur(20px);
+  }
+
+  .card {
+    position: absolute; background: #0A0A0A; border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 12px; overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.65), 0 2px 6px rgba(0,0,0,0.5);
+  }
+  .bar {
+    height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.1); background: #111;
+    font: 500 12px/16px 'Geist Mono', monospace; color: #A1A1A1;
+  }
+  .dots { display: flex; gap: 6px; margin-right: 6px; }
+  .dots i { width: 10px; height: 10px; border-radius: 50%; background: #2A2A2A; display: block; }
+
+  /* app window */
+  .window { left: 318px; top: 76px; width: 840px; }
+  .url {
+    flex: 1; margin: 0 80px; height: 22px; border-radius: 6px; background: #000;
+    border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .url b { width: 6px; height: 6px; border-radius: 50%; background: #3ECF8E; display: block; }
+  .window img { display: block; width: 100%; }
+
+  /* code card */
+  .code { left: 48px; top: 176px; width: 452px; }
+  pre { padding: 14px 16px 16px; font: 400 12px/20px 'Geist Mono', monospace; color: #D4D4D4; white-space: pre; }
+  .k { color: #FF7AB2; } .f { color: #52A8FF; } .s { color: #3ECF8E; } .c { color: #6B6B6B; } .n { color: #F5A524; }
+  .caret { display: inline-block; width: 7px; height: 14px; background: #52A8FF; vertical-align: -2px; }
+
+  /* stream log */
+  .stream { left: 96px; top: 470px; width: 320px; }
+  .ev { display: flex; align-items: center; gap: 10px; padding: 8px 14px; font: 400 12px/16px 'Geist Mono', monospace; color: #A1A1A1; border-top: 1px solid rgba(255,255,255,0.06); }
+  .ev:first-of-type { border-top: 0; }
+  .ev .t { color: #EDEDED; }
+  .ev .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  /* tokens card */
+  .tokens { left: 852px; top: 430px; width: 300px; }
+  .tok { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 10px; padding: 9px 14px; border-top: 1px solid rgba(255,255,255,0.06); font: 400 12px/16px 'Geist Mono', monospace; }
+  .tok:first-of-type { border-top: 0; }
+  .sw { width: 22px; height: 22px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.16); }
+  .tok span:nth-child(2) { color: #EDEDED; }
+  .tok span:nth-child(3) { color: #A1A1A1; }
+
+  /* status pill */
+  .pill {
+    position: absolute; left: 980px; top: 58px; display: flex; align-items: center; gap: 8px;
+    padding: 4px 10px; border-radius: 9999px; background: #0A0A0A; border: 1px solid rgba(255,255,255,0.16);
+    font: 500 12px/16px 'Geist', sans-serif; color: #EDEDED; box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  }
+  .pill i { width: 7px; height: 7px; border-radius: 50%; background: #52A8FF; box-shadow: 0 0 0 4px rgba(82,168,255,0.18); display: block; }
+
+  /* connector line from code to window */
+  svg.wire { position: absolute; inset: 0; pointer-events: none; }
+</style></head>
+<body>
+  <div class="grid"></div>
+  <div class="glow"></div>
+
+  <div class="card window">
+    <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url"><b></b>generative-ui-demo-pi.vercel.app</span></div>
+    <img src="../screenshots/family-gift-budget-dark.webp" alt="">
+  </div>
+
+  <div class="pill"><i></i>Streaming widget</div>
+
+  <svg class="wire" viewBox="0 0 1200 852">
+    <path d="M500 250 C 545 250, 550 300, 600 300" fill="none" stroke="rgba(82,168,255,0.6)" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <circle cx="600" cy="300" r="3.5" fill="#52A8FF"/>
+  </svg>
+
+  <div class="card code">
+    <div class="bar"><span class="dots"><i></i><i></i><i></i></span>server.py</div>
+<pre><span class="c"># Parse tool arguments while they stream</span>
+<span class="k">def</span> <span class="f">extract_widget_code</span>(partial_json):
+    <span class="k">try</span>:
+        <span class="k">return</span> json.loads(partial_json)[<span class="s">"widget_code"</span>]
+    <span class="k">except</span> JSONDecodeError:
+        <span class="k">pass</span>  <span class="c"># JSON isn't closed yet</span>
+    rest = partial_json.split(<span class="s">'"widget_code"'</span>, <span class="n">1</span>)[<span class="n">1</span>]
+    <span class="k">return</span> <span class="f">walk_string</span>(rest)  <span class="c"># HTML so far</span>
+
+<span class="k">yield</span> <span class="f">sse</span>({<span class="s">"type"</span>: <span class="s">"widget_delta"</span>, <span class="s">"html"</span>: html})<span class="caret"></span></pre>
+  </div>
+
+  <div class="card stream">
+    <div class="bar"><span class="dots"><i></i><i></i><i></i></span>POST /chat · text/event-stream</div>
+    <div class="ev"><span class="dot" style="background:#A1A1A1"></span><span class="t">status</span>Loading guidelines…</div>
+    <div class="ev"><span class="dot" style="background:#52A8FF"></span><span class="t">widget_delta</span>2,184 chars</div>
+    <div class="ev"><span class="dot" style="background:#52A8FF"></span><span class="t">widget_delta</span>4,906 chars</div>
+    <div class="ev"><span class="dot" style="background:#3ECF8E"></span><span class="t">widget_final</span>scripts run</div>
+  </div>
+
+  <div class="card tokens">
+    <div class="bar"><span class="dots"><i></i><i></i><i></i></span>generative-ui.tokens.json</div>
+    <div class="tok"><span class="sw" style="background:#000000"></span><span>color.bg.default</span><span>#000000</span></div>
+    <div class="tok"><span class="sw" style="background:#EDEDED"></span><span>color.text.primary</span><span>#EDEDED</span></div>
+    <div class="tok"><span class="sw" style="background:#0A72EF"></span><span>color.accent</span><span>#0A72EF</span></div>
+    <div class="tok"><span class="sw" style="background:#3ECF8E"></span><span>color.status.success</span><span>#3ECF8E</span></div>
+  </div>
+</body></html>
