@@ -80,6 +80,7 @@ Generative-UI-demo/
 ├── docs/
 │   ├── GENERATIVE_UI_EXPLAINED.md   # Deep-dive on how everything works
 │   └── screenshots/                 # README showcase images
+├── design-tokens/         # The design system as W3C tokens (import into Penpot)
 ├── requirements.txt
 ├── .env.example           # Template for your API key
 └── .devcontainer/         # One-click GitHub Codespaces setup
