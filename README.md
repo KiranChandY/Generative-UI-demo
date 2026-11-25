@@ -4,6 +4,8 @@
 
 Generative UI Demo is a chat app where Claude doesn't just answer in text. When you ask for something visual, such as a calculator, a chart, a dashboard, a flowchart or a timer, the model composes a real HTML/SVG widget and you watch it render **token by token** in a side panel. The widgets work: buttons, sliders and inputs function, and they can send data back to the AI for follow-up answers.
 
+**🌐 Live demo: [generative-ui-demo-pi.vercel.app](https://generative-ui-demo-pi.vercel.app)**
+
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/KiranChandY/Generative-UI-demo)
 
 ---
@@ -54,6 +56,10 @@ Generative-UI-demo/
 ## 🚀 Getting Started
 
 You need an **Anthropic API key**, which you can create at [console.anthropic.com](https://console.anthropic.com/). The app makes live calls to Claude, so it can't run without one.
+
+### Option 0: Just try it
+
+Open the hosted version at **https://generative-ui-demo-pi.vercel.app**. Nothing to install.
 
 ### Option 1: Live preview in your browser (no install)
 
@@ -149,6 +155,14 @@ Browser ──POST /chat──▶ FastAPI ──stream──▶ Claude API
 4. If Claude calls a tool, the server runs it, adds the result to the conversation, and loops until Claude is done.
 
 For the full walkthrough, see **[docs/GENERATIVE_UI_EXPLAINED.md](docs/GENERATIVE_UI_EXPLAINED.md)**. It covers mid-stream JSON parsing, DOM diffing, script execution, CSS-variable theming, lazy guideline injection and the multi-turn tool loop.
+
+## ☁️ Deployment
+
+The live demo runs on [Vercel](https://vercel.com). Vercel detects the FastAPI app in `server.py` and serves `public/` from its CDN. Every push to `main` redeploys automatically. To deploy your own copy:
+
+1. Import the repo at [vercel.com/new](https://vercel.com/new). No build settings are needed.
+2. Under **Settings → Environment Variables**, add `ANTHROPIC_API_KEY`.
+3. Redeploy.
 
 ## 🛠️ Troubleshooting
 
