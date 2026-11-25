@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #e9eaec; font-family: 'Geist', sans-serif; color: #171717; -webkit-font-smoothing: antialiased; padding: 40px; display: flex; flex-direction: column; gap: 40px; align-items: flex-start; }
+  .board { position: relative; overflow: hidden; background: #fff; }
+  .mono { font-family: 'Geist Mono', monospace; }
+
+  /* ───────── HERO (dark, MacBook) ───────── */
+  #hero { width: 1200px; height: 852px; background: #000; color: #EDEDED; }
+  #hero .grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 48px 48px; -webkit-mask-image: radial-gradient(ellipse 70% 65% at 60% 36%, #000 30%, transparent 78%); }
+  #hero .glow { position: absolute; width: 820px; height: 460px; left: 300px; top: 40px; background: radial-gradient(ellipse at center, rgba(10,114,239,0.24), transparent 65%); filter: blur(24px); }
+  .mac { position: absolute; left: 300px; top: 62px; width: 780px; }
+  .lid { position: relative; width: 780px; padding: 16px 16px 22px; border-radius: 26px 26px 8px 8px; background: linear-gradient(180deg, #2b2b2e, #1a1a1c); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12), 0 40px 90px rgba(0,0,0,0.7); }
+  .lid::before { content: ""; position: absolute; inset: 6px 6px 10px; border-radius: 20px 20px 4px 4px; background: #050505; }
+  .screen { position: relative; border-radius: 10px; overflow: hidden; aspect-ratio: 16 / 10; background: #000; }
+  .screen img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .notch { position: absolute; left: 50%; top: 6px; transform: translateX(-50%); width: 112px; height: 18px; background: #050505; border-radius: 0 0 10px 10px; z-index: 2; }
+  .notch i { position: absolute; left: 50%; top: 6px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: #1c2230; }
+  .base { position: relative; margin: 0 auto; width: 900px; height: 20px; margin-left: -60px; border-radius: 2px 2px 22px 22px; background: linear-gradient(180deg, #3a3a3e 0%, #232326 45%, #121214 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 30px 60px rgba(0,0,0,0.6); }
+  .base::before { content: ""; position: absolute; left: 50%; top: 0; transform: translateX(-50%); width: 140px; height: 8px; border-radius: 0 0 10px 10px; background: #19191b; box-shadow: inset 0 -1px 0 rgba(255,255,255,0.06); }
+  .hcard { position: absolute; background: #0A0A0A; border: 1px solid rgba(255,255,255,0.14); border-radius: 12px; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,0.65); }
+  .bar { height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid rgba(255,255,255,0.1); background: #111; font: 500 12px/16px 'Geist Mono', monospace; color: #A1A1A1; }
+  .dots { display: flex; gap: 6px; margin-right: 6px; } .dots i { width: 10px; height: 10px; border-radius: 50%; background: #2A2A2A; display: block; }
+  .code { left: 40px; top: 286px; width: 420px; }
+  pre { padding: 12px 16px 14px; font: 400 12px/20px 'Geist Mono', monospace; color: #D4D4D4; }
+  .k { color: #FF7AB2; } .f { color: #52A8FF; } .s { color: #3ECF8E; } .c { color: #6B6B6B; } .n { color: #F5A524; }
+  .caret { display: inline-block; width: 7px; height: 14px; background: #52A8FF; vertical-align: -2px; }
+  .tokens { left: 912px; top: 360px; width: 260px; }
+  .tok { display: grid; grid-template-columns: 20px 1fr; align-items: center; gap: 10px; padding: 8px 14px; border-top: 1px solid rgba(255,255,255,0.06); font: 400 12px/16px 'Geist Mono', monospace; color: #EDEDED; }
+  .tok:first-of-type { border-top: 0; }
+  .sw { width: 20px; height: 20px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.16); }
+  .pill { position: absolute; display: flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: 9999px; background: #0A0A0A; border: 1px solid rgba(255,255,255,0.16); font: 500 12px/16px 'Geist'; color: #EDEDED; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+  .pill i { width: 7px; height: 7px; border-radius: 50%; background: #52A8FF; box-shadow: 0 0 0 4px rgba(82,168,255,0.18); display: block; }
+
+  /* ───────── shared light board pieces ───────── */
+  .lb { width: 1000px; padding: 40px; background: #fff; }
+  .lb h3 { font: 600 13px/16px 'Geist Mono', monospace; color: #6B7280; letter-spacing: 0.02em; margin-bottom: 20px; text-transform: none; }
+
+  /* wireframes */
+  .wf { position: relative; border: 1.5px solid #9CA3AF; border-radius: 10px; background: #fff; overflow: hidden; }
+  .wf .chrome { height: 26px; border-bottom: 1.5px solid #D1D5DB; display: flex; align-items: center; gap: 6px; padding: 0 10px; }
+  .wf .chrome i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #9CA3AF; display: block; }
+  .blk { background: #E5E7EB; border-radius: 4px; }
+  .ln { height: 8px; background: #D1D5DB; border-radius: 4px; }
+  .box { border: 1.5px solid #9CA3AF; border-radius: 8px; }
+  .dash { border: 1.5px dashed #9CA3AF; border-radius: 8px; }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .col { display: flex; flex-direction: column; gap: 8px; }
+  .num { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: #0070F3; color: #fff; font: 600 12px/22px 'Geist'; text-align: center; box-shadow: 0 0 0 3px #fff; z-index: 3; }
+  .notes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 32px; margin-top: 22px; }
+  .note { display: grid; grid-template-columns: 22px 1fr; gap: 10px; font: 400 14px/20px 'Geist'; color: #4B5563; }
+  .note b { display: block; color: #171717; font-weight: 600; }
+  .note span.n { width: 22px; height: 22px; border-radius: 50%; background: #0070F3; color: #fff; font: 600 12px/22px 'Geist'; text-align: center; }
+
+  /* flow + IA */
+  .node { position: absolute; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.14); background: #fff; font: 500 13px/18px 'Geist'; color: #171717; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  .node small { display: block; font: 400 11px/14px 'Geist Mono'; color: #6B7280; margin-top: 2px; }
+  .node.dark { background: #000; color: #EDEDED; border-color: #000; }
+  .node.dark small { color: #A1A1A1; }
+  .node.blue { border-color: #0070F3; box-shadow: 0 0 0 3px rgba(0,112,243,0.12); }
+  .node.red { border-color: #D8262D; color: #D8262D; }
+  .dia { position: absolute; width: 130px; height: 74px; }
+  .dia::before { content: ""; position: absolute; inset: 0; background: #FFFBEB; border: 1px solid #D97706; transform: rotate(0); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+  .dia span { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; font: 500 12px/15px 'Geist'; color: #92400E; padding: 0 22px; }
+  svg.wires { position: absolute; inset: 0; overflow: visible; }
+  .lane { position: absolute; left: 24px; font: 500 11px/14px 'Geist Mono'; color: #9CA3AF; letter-spacing: 0.04em; }
+  .legend { position: absolute; right: 32px; bottom: 24px; display: flex; gap: 16px; font: 400 12px/16px 'Geist'; color: #6B7280; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+  .ia-col { position: absolute; top: 150px; width: 218px; display: flex; flex-direction: column; gap: 8px; }
+  .ia-h { padding: 10px 12px; border-radius: 10px; background: #000; color: #EDEDED; font: 600 13px/18px 'Geist'; }
+  .ia-h small { display: block; font: 400 11px/14px 'Geist Mono'; color: #A1A1A1; }
+  .ia-g { border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; padding: 10px 12px; background: #FAFAFA; }
+  .ia-g b { display: block; font: 600 12px/16px 'Geist'; margin-bottom: 6px; }
+  .ia-g ul { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .ia-g li { font: 400 12px/16px 'Geist'; color: #4B5563; padding-left: 12px; position: relative; }
+  .ia-g li::before { content: ""; position: absolute; left: 0; top: 7px; width: 6px; height: 1px; background: #9CA3AF; }
+
+  /* phones */
+  .phone { position: relative; width: 260px; height: 540px; border-radius: 44px; background: #0b0b0c; padding: 10px; box-shadow: inset 0 0 0 1.5px #2c2c2e, 0 30px 60px rgba(0,0,0,0.25); }
+  .phone .scr { width: 100%; height: 100%; border-radius: 34px; overflow: hidden; background: #000; position: relative; padding-top: 40px; }
+  .phone img { width: 100%; height: auto; display: block; }
+  .phone .island { position: absolute; top: 10px; left: 50%; margin-left: -42px; width: 84px; height: 24px; border-radius: 14px; background: #000; z-index: 2; }
+</style></head>
+<body>
+
+<!-- ═════════ HERO ═════════ -->
+<div class="board" id="hero">
+  <div class="grid"></div><div class="glow"></div>
+  <div class="mac">
+    <div class="lid"><div class="screen"><div class="notch"><i></i></div><img src="img/hifi-widget-dark.png"></div></div>
+    <div class="base"></div>
+  </div>
+  <div class="pill" style="left: 900px; top: 34px;"><i></i>Streaming widget</div>
+  <div class="hcard code">
+    <div class="bar"><span class="dots"><i></i><i></i><i></i></span>server.py</div>
+<pre><span class="c"># Parse tool arguments while they stream</span>
+<span class="k">def</span> <span class="f">extract_widget_code</span>(partial_json):
+    <span class="k">try</span>:
+        <span class="k">return</span> json.loads(partial_json)[<span class="s">"widget_code"</span>]
+    <span class="k">except</span> JSONDecodeError:
+        <span class="k">pass</span>  <span class="c"># JSON isn't closed yet</span>
+    <span class="k">return</span> <span class="f">walk_string</span>(partial_json)
+
+<span class="k">yield</span> <span class="f">sse</span>({<span class="s">"type"</span>: <span class="s">"widget_delta"</span>, <span class="s">"html"</span>: html})<span class="caret"></span></pre>
+  </div>
+  <div class="hcard tokens">
+    <div class="bar"><span class="dots"><i></i><i></i><i></i></span>tokens.json</div>
+    <div class="tok"><span class="sw" style="background:#000"></span>color.bg.default</div>
+    <div class="tok"><span class="sw" style="background:#EDEDED"></span>color.text.primary</div>
+    <div class="tok"><span class="sw" style="background:#0A72EF"></span>color.accent</div>
+    <div class="tok"><span class="sw" style="background:#3ECF8E"></span>color.status.success</div>
+  </div>
+</div>
+
+<!-- ═════════ WIREFRAME 1: empty state ═════════ -->
+<div class="board lb" id="wf1">
+  <h3>WIREFRAME 01 · FIRST RUN, EMPTY STATE</h3>
+  <div class="wf" style="height: 520px;">
+    <div class="chrome"><i></i><i></i><i></i></div>
+    <div class="row" style="height: 44px; padding: 0 14px; border-bottom: 1.5px solid #D1D5DB;">
+      <div class="blk" style="width:22px;height:22px"></div><div class="ln" style="width:90px"></div><div class="dash" style="width:80px;height:20px;border-radius:99px"></div>
+      <div style="flex:1"></div><div class="ln" style="width:70px"></div><div class="blk" style="width:22px;height:22px;border-radius:6px"></div><div class="blk" style="width:22px;height:22px;border-radius:6px"></div>
+    </div>
+    <div class="row" style="align-items: stretch; height: 448px; gap: 0;">
+      <div class="col" style="width: 300px; padding: 18px 14px; border-right: 1.5px solid #D1D5DB; justify-content: space-between;">
+        <div class="col" style="gap: 10px; margin-top: 30px;">
+          <div class="blk" style="height:18px;width:70%"></div><div class="ln" style="width:95%"></div><div class="ln" style="width:75%"></div>
+          <div class="col" style="margin-top: 10px; gap: 6px;">
+            <div class="box row" style="padding:8px"><div class="blk" style="width:22px;height:22px"></div><div class="col" style="gap:5px;flex:1"><div class="ln" style="width:70%"></div><div class="ln" style="width:50%;height:6px"></div></div></div>
+            <div class="box row" style="padding:8px"><div class="blk" style="width:22px;height:22px"></div><div class="col" style="gap:5px;flex:1"><div class="ln" style="width:55%"></div><div class="ln" style="width:40%;height:6px"></div></div></div>
+            <div class="box row" style="padding:8px"><div class="blk" style="width:22px;height:22px"></div><div class="col" style="gap:5px;flex:1"><div class="ln" style="width:65%"></div><div class="ln" style="width:60%;height:6px"></div></div></div>
+            <div class="box row" style="padding:8px"><div class="blk" style="width:22px;height:22px"></div><div class="col" style="gap:5px;flex:1"><div class="ln" style="width:50%"></div><div class="ln" style="width:45%;height:6px"></div></div></div>
+          </div>
+        </div>
+        <div class="box col" style="padding:10px;gap:14px"><div class="ln" style="width:80%"></div><div class="row"><div class="ln" style="width:45%;height:6px"></div><div style="flex:1"></div><div class="blk" style="width:24px;height:24px;background:#9CA3AF"></div></div></div>
+      </div>
+      <div class="col" style="flex: 1; padding: 14px;">
+        <div class="box" style="flex:1; display:flex; flex-direction:column;">
+          <div class="row" style="height:40px;padding:0 10px;border-bottom:1.5px solid #D1D5DB"><div class="dash" style="width:110px;height:22px"></div><div class="ln" style="width:80px"></div><div style="flex:1"></div><div class="dash" style="width:54px;height:18px;border-radius:99px"></div><div class="blk" style="width:18px;height:18px"></div><div class="blk" style="width:18px;height:18px"></div><div class="blk" style="width:18px;height:18px"></div></div>
+          <div class="col" style="flex:1;align-items:center;justify-content:center;gap:12px">
+            <div class="row"><div class="box" style="width:34px;height:34px"></div><div class="box" style="width:34px;height:34px;border-color:#6B7280"></div><div class="box" style="width:34px;height:34px"></div></div>
+            <div class="blk" style="height:14px;width:200px"></div><div class="ln" style="width:280px"></div><div class="ln" style="width:220px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <span class="num" style="left: 138px; top: 182px;">1</span>
+    <span class="num" style="left: 280px; top: 448px;">2</span>
+    <span class="num" style="left: 318px; top: 86px;">3</span>
+    <span class="num" style="left: 708px; top: 250px;">4</span>
+  </div>
+  <div class="notes">
+    <div class="note"><span class="n">1</span><div><b>Suggestions beat a blank page</b>Five starter prompts show what the AI can build and get people to a first result in one tap.</div></div>
+    <div class="note"><span class="n">2</span><div><b>Composer always in reach</b>Pinned to the bottom of the chat. Enter sends, Shift + Enter adds a line, and the button becomes Stop while streaming.</div></div>
+    <div class="note"><span class="n">3</span><div><b>Preview and Code side by side</b>A segmented toggle borrowed from tools people already know, with status and actions in one toolbar.</div></div>
+    <div class="note"><span class="n">4</span><div><b>An empty state that teaches</b>Explains where the interface will appear before anything has been generated.</div></div>
+  </div>
+</div>
+
+<!-- ═════════ WIREFRAME 2: streaming ═════════ -->
+<div class="board lb" id="wf2">
+  <h3>WIREFRAME 02 · WIDGET STREAMING INTO THE PREVIEW</h3>
+  <div class="wf" style="height: 520px;">
+    <div class="chrome"><i></i><i></i><i></i></div>
+    <div class="row" style="height: 44px; padding: 0 14px; border-bottom: 1.5px solid #D1D5DB;">
+      <div class="blk" style="width:22px;height:22px"></div><div class="ln" style="width:90px"></div><div class="dash" style="width:80px;height:20px;border-radius:99px"></div>
+      <div style="flex:1"></div><div class="ln" style="width:70px"></div><div class="blk" style="width:22px;height:22px;border-radius:6px"></div><div class="blk" style="width:22px;height:22px;border-radius:6px"></div>
+    </div>
+    <div class="row" style="align-items: stretch; height: 448px; gap: 0;">
+      <div class="col" style="width: 300px; padding: 18px 14px; border-right: 1.5px solid #D1D5DB; justify-content: space-between;">
+        <div class="col" style="gap: 14px;">
+          <div class="row" style="justify-content:flex-end"><div class="box col" style="padding:8px;gap:5px;width:70%"><div class="ln" style="width:100%"></div><div class="ln" style="width:60%"></div></div></div>
+          <div class="row" style="align-items:flex-start"><div class="blk" style="width:20px;height:20px;border-radius:50%"></div><div class="col" style="flex:1;gap:7px">
+            <div class="ln" style="width:95%"></div><div class="ln" style="width:70%"></div>
+            <div class="row"><div class="blk" style="width:12px;height:12px"></div><div class="ln" style="width:60%;height:6px;background:#E5E7EB"></div></div>
+            <div class="box row" style="padding:7px;width:80%"><div class="blk" style="width:14px;height:14px"></div><div class="ln" style="width:60%"></div></div>
+            <div class="ln" style="width:90%"></div><div class="ln" style="width:55%"></div>
+          </div></div>
+        </div>
+        <div class="box col" style="padding:10px;gap:14px"><div class="ln" style="width:80%"></div><div class="row"><div class="ln" style="width:45%;height:6px"></div><div style="flex:1"></div><div class="blk" style="width:24px;height:24px;background:#9CA3AF;border-radius:4px"></div></div></div>
+      </div>
+      <div class="col" style="flex: 1; padding: 14px;">
+        <div class="box" style="flex:1; display:flex; flex-direction:column;">
+          <div class="row" style="height:40px;padding:0 10px;border-bottom:1.5px solid #D1D5DB"><div class="dash" style="width:110px;height:22px"></div><div class="ln" style="width:120px"></div><div style="flex:1"></div><div class="box" style="width:74px;height:18px;border-radius:99px;border-color:#0070F3"></div><div class="blk" style="width:18px;height:18px"></div><div class="blk" style="width:18px;height:18px"></div><div class="blk" style="width:18px;height:18px"></div></div>
+          <div class="col" style="flex:1;padding:18px;gap:12px">
+            <div class="blk" style="height:16px;width:40%"></div><div class="ln" style="width:30%"></div>
+            <div class="row" style="gap:10px"><div class="box col" style="flex:1;padding:10px;gap:8px"><div class="ln" style="width:50%;height:6px"></div><div class="blk" style="height:18px;width:60%"></div></div><div class="box col" style="flex:1;padding:10px;gap:8px"><div class="ln" style="width:40%;height:6px"></div><div class="blk" style="height:18px;width:50%"></div></div><div class="dash" style="flex:1;height:58px"></div><div class="dash" style="flex:1;height:58px"></div></div>
+            <div class="dash" style="flex:1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <span class="num" style="left: 70px; top: 192px;">1</span>
+    <span class="num" style="left: 250px; top: 258px;">2</span>
+    <span class="num" style="left: 846px; top: 86px;">3</span>
+    <span class="num" style="left: 830px; top: 250px;">4</span>
+  </div>
+  <div class="notes">
+    <div class="note"><span class="n">1</span><div><b>Status in the thread</b>A quiet line shows when the AI loads design guidelines, so waiting never feels frozen.</div></div>
+    <div class="note"><span class="n">2</span><div><b>A chip links reply and widget</b>Each finished widget leaves a card in the chat that jumps back to it.</div></div>
+    <div class="note"><span class="n">3</span><div><b>Live status pill</b>Thinking, Streaming, Ready or Error, always in the same spot.</div></div>
+    <div class="note"><span class="n">4</span><div><b>Progressive rendering</b>Finished parts render immediately; unfinished regions (dashed) fill in as the HTML arrives.</div></div>
+  </div>
+</div>
+
+<!-- ═════════ WIREFRAME 3: mobile ═════════ -->
+<div class="board lb" id="wf3">
+  <h3>WIREFRAME 03 · MOBILE, CHAT AND PREVIEW AS TABS</h3>
+  <div class="row" style="gap: 40px; align-items: flex-start; justify-content: center;">
+    <div class="wf" style="width:220px;height:440px;border-radius:28px;padding:14px;position:relative">
+      <div class="row" style="justify-content:space-between"><div class="blk" style="width:20px;height:20px"></div><div class="row" style="gap:6px"><div class="blk" style="width:16px;height:16px"></div><div class="blk" style="width:16px;height:16px"></div></div></div>
+      <div class="row" style="margin-top:12px;gap:0" ><div class="box" style="flex:1;height:26px;border-color:#6B7280;background:#F3F4F6;border-radius:8px 0 0 8px"></div><div class="box" style="flex:1;height:26px;border-radius:0 8px 8px 0;border-left:0"></div></div>
+      <div class="col" style="margin-top:40px;gap:8px"><div class="blk" style="height:16px;width:70%"></div><div class="ln" style="width:90%"></div><div class="ln" style="width:60%"></div>
+        <div class="box" style="height:40px;margin-top:8px"></div><div class="box" style="height:40px"></div><div class="box" style="height:40px"></div></div>
+      <div class="box" style="position:absolute;left:14px;right:14px;bottom:14px;height:56px"></div>
+      <span class="num" style="left: 50px; top: 38px;">1</span>
+    </div>
+    <div class="wf" style="width:220px;height:440px;border-radius:28px;padding:14px;position:relative">
+      <div class="row" style="justify-content:space-between"><div class="blk" style="width:20px;height:20px"></div><div class="row" style="gap:6px"><div class="blk" style="width:16px;height:16px"></div><div class="blk" style="width:16px;height:16px"></div></div></div>
+      <div class="row" style="margin-top:12px;gap:0" ><div class="box" style="flex:1;height:26px;border-radius:8px 0 0 8px"></div><div class="box" style="flex:1;height:26px;border-color:#6B7280;background:#F3F4F6;border-radius:0 8px 8px 0;border-left:0"></div></div>
+      <div class="box col" style="margin-top:12px;height:356px;padding:10px;gap:10px"><div class="row"><div class="dash" style="width:70px;height:18px"></div><div style="flex:1"></div><div class="blk" style="width:12px;height:12px;border-radius:50%"></div></div>
+        <div class="blk" style="height:14px;width:70%"></div><div class="box" style="height:52px"></div><div class="box" style="height:52px"></div><div class="dash" style="flex:1"></div></div>
+      <span class="num" style="left: 176px; top: 74px;">2</span>
+    </div>
+    <div class="col" style="width:330px;gap:16px;padding-top:30px">
+      <div class="note"><span class="n">1</span><div><b>One task per screen</b>On phones the split view becomes a Chat / Preview switch instead of squeezing two panes into 390px.</div></div>
+      <div class="note"><span class="n">2</span><div><b>Follow the work</b>When a widget starts streaming, the app switches to Preview by itself, and a widget interaction brings you back to the chat for the reply.</div></div>
+      <div class="note"><span class="n" style="background:#171717">i</span><div><b>Toolbar trims itself</b>Open in new tab and full screen hide on narrow screens; copy and status stay.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════ USER FLOW ═════════ -->
+<div class="board lb" id="flow" style="height: 620px;">
+  <h3>USER FLOW · FROM PROMPT TO A WORKING WIDGET</h3>
+  <svg class="wires" viewBox="0 0 1000 620">
+    <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#6B7280"/></marker>
+    <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#0070F3"/></marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#D8262D"/></marker></defs>
+    <g stroke="#6B7280" stroke-width="1.5" fill="none" marker-end="url(#a)">
+      <path d="M126 160 H150"/>
+      <path d="M268 160 H280"/>
+      <path d="M402 160 H426"/>
+      <path d="M548 160 H572"/>
+      <path d="M694 160 H718"/>
+      <path d="M840 160 H862"/>
+      <path d="M915 186 V250 H160 V300"/>
+      <path d="M915 186 V250 H350 V300"/>
+      <path d="M915 186 V250 H540 V300"/>
+      <path d="M915 186 V250 H730 V300"/>
+    </g>
+    <g stroke="#0070F3" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#ab)">
+      <path d="M160 370 V430 H40 V110 H487 V134"/>
+    </g>
+    <g stroke="#D8262D" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#ar)">
+      <path d="M633 186 V470 H700"/>
+    </g>
+    <g stroke="#6B7280" stroke-width="1.5" fill="none" marker-end="url(#a)" stroke-dasharray="2 4"><path d="M910 372 V560 H91 V186"/></g>
+  </svg>
+  <div class="node dark" style="left: 56px; top: 136px; width: 70px;">Open<small>app</small></div>
+  <div class="dia" style="left: 146px; top: 118px; width: 122px; height: 84px;"><span>Suggestion or own prompt?</span></div>
+  <div class="node" style="left: 282px; top: 136px; width: 120px;">Send prompt<small>Enter / tap</small></div>
+  <div class="node" style="left: 428px; top: 136px; width: 120px;">Thinking<small>skeleton + status</small></div>
+  <div class="node" style="left: 574px; top: 136px; width: 120px;">Widget streams<small>widget_delta</small></div>
+  <div class="node blue" style="left: 720px; top: 136px; width: 120px;">Widget ready<small>scripts run</small></div>
+  <div class="node" style="left: 864px; top: 136px; width: 104px;">Explore<small>4 paths</small></div>
+  <div class="node" style="left: 90px; top: 302px; width: 140px;">Use the widget<small>sendToAgent()</small></div>
+  <div class="node" style="left: 280px; top: 302px; width: 140px;">Inspect the code<small>Code tab · copy</small></div>
+  <div class="node" style="left: 470px; top: 302px; width: 140px;">Take it further<small>new tab · full screen</small></div>
+  <div class="node" style="left: 660px; top: 302px; width: 140px;">Switch theme<small>widgets recolor</small></div>
+  <div class="node" style="left: 850px; top: 302px; width: 120px;">New chat<small>back to start</small></div>
+  <div class="node red" style="left: 702px; top: 450px; width: 250px; text-align:left;">Error, shown inline<small>usage limit · network · API key</small></div>
+  <div style="position:absolute;left:250px;top:400px;width:330px;font:400 12px/16px 'Geist';color:#0070F3">Interaction data goes back to the AI, which replies or renders a new widget: the loop that makes widgets two way.</div>
+  <div class="legend"><span><i style="background:#000"></i>entry</span><span><i style="background:#FFFBEB;border:1px solid #D97706"></i>decision</span><span><i style="border:1.5px solid #0070F3"></i>goal state</span><span><i style="border:1.5px dashed #0070F3"></i>feedback loop</span></div>
+</div>
+
+<!-- ═════════ INFORMATION ARCHITECTURE ═════════ -->
+<div class="board lb" id="ia" style="height: 690px;">
+  <h3>INFORMATION ARCHITECTURE · ONE SCREEN, TWO PANELS</h3>
+  <div class="node dark" style="left: 420px; top: 76px; width: 160px;">Generative UI<small>single page app</small></div>
+  <svg class="wires" viewBox="0 0 1000 690"><g stroke="#9CA3AF" stroke-width="1.5" fill="none"><path d="M500 120 V136 H149 V150"/><path d="M500 136 H385 V150"/><path d="M500 136 H621 V150"/><path d="M500 136 H857 V150"/></g></svg>
+  <div class="ia-col" style="left: 40px;">
+    <div class="ia-h">Header<small>always visible</small></div>
+    <div class="ia-g"><b>Brand</b><ul><li>Logo + name</li><li>Model badge</li></ul></div>
+    <div class="ia-g"><b>Actions</b><ul><li>New chat</li><li>View source on GitHub</li><li>Theme toggle, dark / light</li></ul></div>
+  </div>
+  <div class="ia-col" style="left: 276px;">
+    <div class="ia-h">Chat panel<small>conversation</small></div>
+    <div class="ia-g"><b>Empty state</b><ul><li>Heading + intro</li><li>5 suggestion cards</li></ul></div>
+    <div class="ia-g"><b>Thread</b><ul><li>User message</li><li>Widget interaction message</li><li>Assistant reply, Markdown</li><li>Status line</li><li>Widget chip</li><li>Inline error</li></ul></div>
+    <div class="ia-g"><b>Composer</b><ul><li>Prompt input</li><li>Keyboard hint</li><li>Send / Stop</li></ul></div>
+  </div>
+  <div class="ia-col" style="left: 512px;">
+    <div class="ia-h">Preview panel<small>the generated UI</small></div>
+    <div class="ia-g"><b>Toolbar</b><ul><li>Preview / Code tabs</li><li>Widget title</li><li>Status pill</li><li>Copy · New tab · Full screen</li></ul></div>
+    <div class="ia-g"><b>Preview canvas</b><ul><li>Empty state</li><li>Loading skeleton</li><li>Live widget</li></ul></div>
+    <div class="ia-g"><b>Code view</b><ul><li>HTML, streaming in</li></ul></div>
+  </div>
+  <div class="ia-col" style="left: 748px;">
+    <div class="ia-h">Responsive<small>≤ 860px wide</small></div>
+    <div class="ia-g"><b>View switch</b><ul><li>Chat tab</li><li>Preview tab</li><li>Auto switch on stream</li></ul></div>
+    <div class="ia-g"><b>Outside the app</b><ul><li>Branded 404 page</li><li>Widget in a new tab</li><li>Link preview image</li></ul></div>
+  </div>
+</div>
+
+<!-- ═════════ HI-FI MOBILE ═════════ -->
+<div class="board" id="mobile" style="width: 1000px; height: 640px; background: #F2F4F7; display:flex; align-items:center; justify-content:center; gap: 44px;">
+  <div class="phone"><div class="scr"><div class="island"></div><img src="img/hifi-m-empty.png"></div></div>
+  <div class="phone"><div class="scr"><div class="island"></div><img src="img/hifi-m-chat.png"></div></div>
+  <div class="phone"><div class="scr"><div class="island"></div><img src="img/hifi-m-preview.png"></div></div>
+</div>
+
+</body></html>
