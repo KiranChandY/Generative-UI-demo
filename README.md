@@ -8,7 +8,26 @@ Generative UI Demo is a chat app where Claude doesn't just answer in text. When 
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/KiranChandY/Generative-UI-demo)
 
+<a href="https://generative-ui-demo-pi.vercel.app">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/family-gift-budget-light.webp">
+    <img alt="Generative UI: Claude builds a working family gift budget tool from the prompt “build a budget tool, for gifts for family”" src="docs/screenshots/family-gift-budget-dark.webp">
+  </picture>
+</a>
+
 ---
+
+## 📸 Showcase
+
+The screenshot above shows one prompt, *“build a budget tool, for gifts for family”*, which became a working **family gift budget** tool. It includes an editable total budget, live budget, spent and remaining cards, a progress bar that turns red when you overspend, and a form to add people and gifts. Nothing was pre-built: Claude wrote the whole interface and it streamed into the preview as it was generated.
+
+The app ships with a **dark theme by default** and a **light theme**, and widgets switch along with it:
+
+| Dark (default) | Light |
+|---|---|
+| ![Family gift budget in the dark theme](docs/screenshots/family-gift-budget-dark.webp) | ![Family gift budget in the light theme](docs/screenshots/family-gift-budget-light.webp) |
+
+More prompts to try: a compound interest calculator, a sales chart, an HTTP request flowchart, a metrics dashboard or a pomodoro timer.
 
 ## ✨ Features
 
@@ -59,7 +78,8 @@ Generative-UI-demo/
 │   ├── favicon.svg
 │   └── og.svg             # Social sharing image
 ├── docs/
-│   └── GENERATIVE_UI_EXPLAINED.md   # Deep-dive on how everything works
+│   ├── GENERATIVE_UI_EXPLAINED.md   # Deep-dive on how everything works
+│   └── screenshots/                 # README showcase images
 ├── requirements.txt
 ├── .env.example           # Template for your API key
 └── .devcontainer/         # One-click GitHub Codespaces setup
